@@ -1,3 +1,0 @@
-﻿  Source.cpp
-Source.obj : error LNK2019: unresolved external symbol "void __cdecl cv::imshow(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class cv::debug_build_guard::_InputArray const &)" (?imshow@cv@@YAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBV_InputArray@debug_build_guard@1@@Z) referenced in function main
-C:\Users\Jimmy\CppCode\OpenCV-Cpp\OpenCVTutorials\x64\Debug\OpenCVTutorials.exe : fatal error LNK1120: 1 unresolved externals

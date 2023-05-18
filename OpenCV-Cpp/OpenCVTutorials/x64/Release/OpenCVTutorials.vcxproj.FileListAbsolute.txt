@@ -1,1 +1,0 @@
-C:\Users\Jimmy\CppCode\OpenCV-Cpp\OpenCVTutorials\x64\Release\OpenCVTutorials.exe

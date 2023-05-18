@@ -1,6 +1,0 @@
-﻿  SparseOpticalFlowEx.cpp
-  Generating code
-  Previous IPDB and IOBJ mismatch, fall back to full compilation.
-  All 245 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
-  Finished generating code
-  OpenCVTutorials.vcxproj -> C:\Users\Jimmy\CppCode\OpenCV-Cpp\OpenCVTutorials\x64\Release\OpenCVTutorials.exe
