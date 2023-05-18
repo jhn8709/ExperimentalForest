@@ -1,0 +1,10 @@
+﻿  main.cpp
+C:\Users\Jimmy\CppCode\DataLabelProject-Cpp\main.cpp(86,11): warning C4244: 'return': conversion from 'WPARAM' to 'int', possible loss of data
+C:\Users\Jimmy\CppCode\DataLabelProject-Cpp\main.cpp(129,26): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Jimmy\CppCode\DataLabelProject-Cpp\main.cpp(375,67): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  Generating code
+  3 of 405 functions ( 0.7%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  StepView.vcxproj -> C:\Users\Jimmy\CppCode\DataLabelProject-Cpp\x64\Release\ForestLabelerPlus.exe
