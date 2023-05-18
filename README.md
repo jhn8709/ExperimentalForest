@@ -6,6 +6,7 @@ as the executable. These files can be downloaded at: https://opencv.org/releases
 1) opencv_world460.dll
 2) opencv_videoio_msmf460_64.dll
 3) opencv_videoio_ffmpeg460_64.dll
+
 The path to these files is: opencv\build\x64\vc15\bin
 
 There are a couple of things you should know before using the program:
