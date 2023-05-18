@@ -24,5 +24,5 @@ The standard procedure is:
 2) Then, press i to interpolate the points forward.
 3) You can press m to modify point locations or del to delete points. You can always press i to interpolate again.
 4) Use s and d to move backwards and forwards through the frames.
-- Use a to move quickly backwards and g to move quickly forwards.
+5) Use a to move quickly backwards and g to move quickly forwards. (fast forward buttons)
 6) Export all the points to a .csv file when pressing enter.
