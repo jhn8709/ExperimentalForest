@@ -16,10 +16,13 @@ to resize the image will be added later.
 3) You will likely want to save often as the program does crash without saving progress.
 4) The interpolation will automatically stop when 2 points cannot be tracked. Points will usually lose tracking when they reach
 the bottom of the image area. Try to modify the points before this happens.
+5) The amount of frames interpolated and the amount of frames skipped when using 'fast forward' buttons can be changed
+in the settings tab at the top right.
 
 The standard procedure is:
 1) Place the points by pressing n.
 2) Then, press i to interpolate the points forward.
 3) You can press m to modify point locations or del to delete points. You can always press i to interpolate again.
 4) Use s and d to move backwards and forwards through the frames.
-5) Export all the points to a .csv file when pressing enter.
+- Use a to move quickly backwards and g to move quickly forwards.
+6) Export all the points to a .csv file when pressing enter.
