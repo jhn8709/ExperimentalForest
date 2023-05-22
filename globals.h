@@ -16,8 +16,9 @@
 	void		DeletePoint(int x_change, int y_change);
 	void		LoadNextFrame();
 	void		InterpolateFrames();
-	void		DataToCSV();
-	void		LoadCSVData(char *file_name);
+	//void		DataToCSV();
+	void		LoadCSVData(char* file_name);
+	//void		ResizeFrame(Mat* img);
 
 
 #define TIMER_SECOND		1								/* ID of timer used during playback */
@@ -48,6 +49,7 @@ extern int			  nFrames;
 extern bool			  VideoLoaded;			/* 0=>no; 1=>yes (file exists and is opened in ffmpeg library) */
 extern bool			  changeFFSpeed;
 extern bool			  changeInterpolationLength;
+extern bool			  saveIndicator;
 
 //extern char		  GTFilename[320];		/* file that contains the ground truth steps */
 
@@ -70,5 +72,7 @@ struct GroundTruth
 	int y[10];
 	int point_count{0};
 };
+
+
 extern GroundTruth *pointData;
 

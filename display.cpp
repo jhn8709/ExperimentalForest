@@ -64,7 +64,7 @@ if (VideoLoaded)
 				DISPLAY_ROWS, /* number of scan lines */
 				disp_image,&bm_info,DIB_RGB_COLORS);
 
-  sprintf(text, "Frame: %d/%d   ", FrameIndex, TotalData); /* new addition 4/16/2023 */
+  sprintf(text, "Frame: %d/%d      ", FrameIndex, TotalData); /* new addition 4/16/2023 */
   TextOut(hDC, DISPLAY_COLS+20, 50, (LPCSTR)text, strlen(text));
   sprintf(text, "Keyboard Shortcuts:"); /* new addition 4/18/2023 */
   TextOut(hDC, DISPLAY_COLS + 20, 90, (LPCSTR)text, strlen(text));
@@ -142,10 +142,22 @@ void DrawPoint(int xval, int yval, int DrawMode) // draw = 0 means change back t
 	HDC		hDC;
 	double angle, x1, y1;
 	int radius = 0;
+	char text[320];
 	//int cxmouse = xmouse;
 	//int cymouse = ymouse;
 
+
 	hDC = GetDC(MainWnd);
+	
+	if (saveIndicator == TRUE)
+	{
+		hDC = GetDC(MainWnd);
+		sprintf(text, "                              "); /* new addition 5/18/2023 */
+		TextOut(hDC, DISPLAY_COLS + 20, 600, (LPCSTR)text, strlen(text));
+		ReleaseDC(MainWnd, hDC);
+		saveIndicator = FALSE;
+	}
+
 	if (DrawMode == 0)
 	{
 		//cxmouse = x_change;
@@ -252,6 +264,7 @@ void DrawLine(int startX, int startY, int endX, int endY, int mode) // draw = 0 
 void LoadNextFrame()
 {
 	int X, Y;
+
 	/* Display points and lines that are already recorded for this frame without recording anything new. */
 	for (int i = 0; i < pointData[FrameIndex].point_count; i++)
 	{

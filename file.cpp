@@ -27,6 +27,8 @@ int			  TotalData;			/* total #samples in the accelerometer data file */
 int			  nFrames{150};
 //Mat img;
 
+void ResizeFrame(Mat* img);
+
 
 
 int ReadVideo(char* file_name)
@@ -42,8 +44,9 @@ int ReadVideo(char* file_name)
 		return 0;
 	}
 	VideoLoaded = TRUE;
-	DISPLAY_ROWS = (int)(capture.get(CAP_PROP_FRAME_HEIGHT));
-	DISPLAY_COLS = (int)(capture.get(CAP_PROP_FRAME_WIDTH));
+	DISPLAY_ROWS = ((int)(capture.get(CAP_PROP_FRAME_HEIGHT)) < 720) ? (int)(capture.get(CAP_PROP_FRAME_HEIGHT)) : 720;
+	DISPLAY_COLS = ((int)(capture.get(CAP_PROP_FRAME_WIDTH)) < 1280) ? (int)(capture.get(CAP_PROP_FRAME_WIDTH)) : 1280;
+	
 	AllocateStruct(TotalData);
 	//disp_image = (unsigned char*)calloc(DISPLAY_ROWS * DISPLAY_COLS * 3, 1);
 
@@ -56,6 +59,7 @@ int ReadVideoFrame()
 	static Mat img;
 	capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
 	capture.read(img);
+	ResizeFrame(&img);
 	disp_image = img.data;
 	
 	//strcpy((char*)disp_image, (const char*)img.data);
@@ -91,6 +95,9 @@ void InterpolateFrames() /* Repeat set points to a certain amount of frames. Lat
 	//capture >> old_frame;
 	capture.set(CAP_PROP_POS_FRAMES, KLTFrameIndex);
 	capture.read(old_frame);
+	ResizeFrame(&old_frame);
+
+
 	KLTFrameIndex++;
 	cvtColor(old_frame, old_gray, COLOR_BGR2GRAY);
 	vector<Point2f> p0(pointData[FrameIndex].point_count), p1(pointData[FrameIndex].point_count);
@@ -110,6 +117,7 @@ void InterpolateFrames() /* Repeat set points to a certain amount of frames. Lat
 		Mat frame, frame_gray;
 		capture.set(CAP_PROP_POS_FRAMES, KLTFrameIndex);
 		capture.read(frame);
+		ResizeFrame(&frame);
 		if (frame.empty())
 			break;
 		cvtColor(frame, frame_gray, COLOR_BGR2GRAY);
@@ -139,44 +147,6 @@ void InterpolateFrames() /* Repeat set points to a certain amount of frames. Lat
 			break;
 		}
 
-		//for (i = 0; i < PointTotals[FrameIndex]; i++)
-		//{
-		//	if (0 /* include code to determine if KLT tracking is still working properly */)
-		//	{
-		//		//X = fl->feature[i]->x;
-		//		//Y = fl->feature[i]->y;
-		//		px[FrameIndex + iteration][i] = X;
-		//		py[FrameIndex + iteration][i] = Y;
-
-		//	}
-		//	else
-		//	{
-		//		lost_point = i;
-		//		lostP_inc++;
-		//		if (lostP_inc > 1)
-		//		{
-		//			break;
-		//		}
-		//	}
-		//}
-		//if (lostP_inc > 0)
-		//{
-		//	if (lostP_inc > 1)
-		//	{
-		//		break;
-		//	}
-		//	dx = px[FrameIndex + iteration][lost_point + 1] - px[FrameIndex + iteration - 1][lost_point + 1];
-		//	dy = py[FrameIndex + iteration][lost_point + 1] - py[FrameIndex + iteration - 1][lost_point + 1] + 2;
-		//	px[FrameIndex + iteration][lost_point] = px[FrameIndex + iteration - 1][lost_point] + (int)dx;
-		//	py[FrameIndex + iteration][lost_point] = py[FrameIndex + iteration - 1][lost_point] + (int)dy;
-		//	if (py[FrameIndex + iteration][lost_point] > DISPLAY_ROWS)
-		//	{
-		//		py[FrameIndex + iteration][lost_point] = DISPLAY_ROWS;
-		//	}
-		//}
-		//dx = dy = lostP_inc = 0;
-		//PointTotals[FrameIndex + iteration] = PointTotals[FrameIndex];
-
 		// Now update the previous frame and previous points
 		old_gray = frame_gray.clone();
 		p0 = good_new;
@@ -188,7 +158,7 @@ void InterpolateFrames() /* Repeat set points to a certain amount of frames. Lat
 			if ( (lostP_inc == 1) && (i == 0) )
 			{
 				dx = p0[i].x - pointData[KLTFrameIndex-1].x[1];
-				pointData[KLTFrameIndex].x[0] = round(pointData[KLTFrameIndex-1].x[0]+dx);
+				pointData[KLTFrameIndex].x[0] = round(pointData[KLTFrameIndex-1].x[0]+(0.5)*dx);
 				pointData[KLTFrameIndex].y[0] = DISPLAY_ROWS;
 				pointData[KLTFrameIndex].point_count++;
 			}
@@ -207,5 +177,13 @@ void InterpolateFrames() /* Repeat set points to a certain amount of frames. Lat
 
 		iteration++;
 		KLTFrameIndex++;
+	}
+}
+
+void ResizeFrame(Mat *img)
+{
+	if ((int)(capture.get(CAP_PROP_FRAME_HEIGHT) > 720))
+	{
+		resize(*img, *img, Size(1280, 720), INTER_LINEAR);
 	}
 }

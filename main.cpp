@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS	  /* disable compiler warnings for standard C functions like strcpy() */
+//#define _NO_CRT_STDIO_INLINE
 
-#include <stdio.h>
+#include <cstdio>
 #include <stdlib.h>
 #include <windows.h>
 #include <winuser.h>
@@ -22,19 +23,25 @@ bool DeleteDot{ FALSE };				/* 0=>no; 1=>yes (user can delete placed points in w
 bool SelectDot{ FALSE };				/* 0=>no; 1=>yes (program will detect closest point to click) */
 bool changeFFSpeed{ FALSE };
 bool changeInterpolationLength{ FALSE };
+bool saveIndicator{ FALSE };
 
 char		  DataFilename[320];	/* file that contains the accelerometer data (synchronized and collated at 15 Hz) */
-//char		  VideoFilename[320];	/* file that contains the video */
 char		  CurrentPath[320];		/* path where files were last read/saved */
-//char		  GTFilename[320];		/* file that contains the ground truth steps */
-//int			  TotalFilenames;		/* 0=>no master list available; otherwise the total count */
 int			  FrameIndex;			/* index of data currently being displayed (units are samples, 1/30 Hz) */
 int			  PlayJump;				/* amount of samples to jump during each timer */
 int			  FFspeed;				/* user-definable amount of frames to skip per iteration during fast forward */
 int			  PlayCountdown;		/* used to play brief video sequences, halting when it counts down to zero */
 
+//struct UndoData
+//{
+//	int actionType[5];
+//	int x[5];
+//	int y[5];
+//	int actions_made{0};
+//};
+//UndoData undo;
 
-
+void		DataToCSV();
 
 int APIENTRY WinMain(HINSTANCE hInstance,
 					 HINSTANCE hPrevInstance,
@@ -224,8 +231,9 @@ switch (uMsg)
 	  ymouse = HIWORD(lParam);
 
 	  // select location where the fixed point is placed
-	  if (ModifyDot == 1)
+	  if (ModifyDot == TRUE)
 	  {
+		  //RecordAction(pointData[FrameIndex].x[selected_point], pointData[FrameIndex].y[selected_point], 1);
 		  pointData[FrameIndex].x[selected_point] = xmouse;
 		  pointData[FrameIndex].y[selected_point] = ymouse;
 		  DrawPoint(xmouse, ymouse, 1);
@@ -256,6 +264,7 @@ switch (uMsg)
 	  }
 	  if ((PlaceDot == TRUE) && (ModifyDot == FALSE))
 	  {
+		  //RecordAction(xmouse, ymouse, 2);
 		  DrawPoint(xmouse, ymouse, 2);
 		  //if (PointTotals[TimeIndex] > 0)
 		  if (pointData[FrameIndex].point_count > 0)
@@ -267,6 +276,7 @@ switch (uMsg)
 	  }
 	  if (DeleteDot == TRUE)
 	  {
+		  //RecordAction(xchange, ychange, 0);
 		  DeletePoint(xchange, ychange);
 	  }
 	  return(DefWindowProc(hWnd, uMsg, wParam, lParam));
@@ -374,11 +384,14 @@ switch (uMsg)
 			sprintf(text, "Progress Saved!"); /* new addition 5/18/2023 */
 			TextOut(hDC, DISPLAY_COLS + 20, 600, (LPCSTR)text, strlen(text));
 			ReleaseDC(MainWnd, hDC);
+			saveIndicator = TRUE;
 			if (GetAsyncKeyState(VK_CONTROL) < 0)
 			{
 				PostMessage(MainWnd, WM_COMMAND, ID_QUIT, 0);
 			}
+			
 			break;
+			
 	  }
 	  break;
 
@@ -396,6 +409,7 @@ switch (uMsg)
 	if (wParam == TIMER_SECOND)
 	  {
 	  UpdateDisplay();
+	  LoadNextFrame();
 	  if (PlayCountdown > 0)	  /* playing a brief sequence; stop when counter reaches zero */
 		{
 		PlayCountdown--;
@@ -442,23 +456,19 @@ if (FrameIndex+PlayJump < 0  ||  FrameIndex+PlayJump >= TotalData)
 else
   {
   FrameIndex+=PlayJump;
+  //undo.actions_made = 0;
   }
 PaintImage();
 
 }
 
 
-
 void InitializeDataVariables()
 
 {
-//DataLoaded=0;
 Playing=0;
 PlayJump=1;
 PlayCountdown=0;
-//TotalGTSteps=0;
-//GTFilename[0]='\0';
-
 }
 
 void DataToCSV()
@@ -467,7 +477,13 @@ void DataToCSV()
 	int i=0 , j;
 
 	fpt = fopen("GroundTruth.csv", "w+");
+	if (fpt == NULL) 
+	{
+		// Handle the case when fopen fails
+		return;
+	}
 	fprintf(fpt, "Frame,#ofPoints,X1,Y1,X2,Y2,X3,Y3,X4,Y4,X5,Y5,X6,Y6,X7,Y7,X8,Y8,X9,Y9,X10,Y10\n");
+	//fprintf(fpt, "\n");
 	for (i = 0; i <= TotalData; i++)
 	{
 		fprintf(fpt, "%d", i);
@@ -487,4 +503,13 @@ void DataToCSV()
 	}
 	fclose(fpt);
 }
+
+/* action=0 means point was deleted, action=1 means point was moved, action=2 means point was placed */
+//void RecordAction(int x_record, int y_record, int action) 
+//{
+//	undo.x[undo.actions_made] = x_record;
+//	undo.y[undo.actions_made] = y_record;
+//	undo.actionType[undo.actions_made] = action;
+//	undo.actions_made++;
+//}
 
