@@ -18,6 +18,7 @@
 	void		InterpolateFrames();
 	//void		DataToCSV();
 	void		LoadCSVData(char* file_name);
+	void		UpdateMode(int mode, int flag);
 	//void		ResizeFrame(Mat* img);
 
 
@@ -50,6 +51,7 @@ extern bool			  VideoLoaded;			/* 0=>no; 1=>yes (file exists and is opened in ff
 extern bool			  changeFFSpeed;
 extern bool			  changeInterpolationLength;
 extern bool			  saveIndicator;
+extern bool			  InterruptError;
 
 //extern char		  GTFilename[320];		/* file that contains the ground truth steps */
 

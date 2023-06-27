@@ -80,6 +80,7 @@ if (VideoLoaded)
   TextOut(hDC, DISPLAY_COLS + 20, 190, (LPCSTR)text, strlen(text));
   sprintf(text, "Save and Exit - \"CTRL+ENTER\""); /* new addition 4/18/2023 */
   TextOut(hDC, DISPLAY_COLS + 20, 210, (LPCSTR)text, strlen(text));
+
   
   ReleaseDC(MainWnd,hDC);
   EndPaint(MainWnd,&Painter);
@@ -396,4 +397,31 @@ void LoadCSVData(char *file_name)
 		
 	}
 
+}
+
+void UpdateMode(int mode, int flag) /* new addition 5/26/2023 */
+{
+	char text[320];
+	HDC hDC;
+
+	hDC = GetDC(MainWnd);
+	switch (mode)
+	{
+	case ID_LABELING_PLACEPOINTS:
+		sprintf(text, "Click to Place Points----------------------");
+		break;
+	case ID_LABELING_MODIFYPOINTS:
+		sprintf(text, "Click to Modify Points---------------------");
+		break;
+	case ID_LABELING_DELETEPOINTS:
+		sprintf(text, "Click to Delete Points---------------------");
+		break;
+	}
+	if (flag == FALSE)
+	{
+		sprintf(text, "Press \"n\",\"m\",or \"DELETE\" to Edit");
+	}
+	TextOut(hDC, DISPLAY_COLS + 20, 250, (LPCSTR)text, strlen(text));
+
+	ReleaseDC(MainWnd, hDC);
 }

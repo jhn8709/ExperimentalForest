@@ -193,18 +193,21 @@ switch (uMsg)
 		  PlaceDot = !PlaceDot;
 		  SelectDot = FALSE;
 		  DeleteDot = FALSE;
+		  UpdateMode(ID_LABELING_PLACEPOINTS, PlaceDot);
 		  break;
 
 	  case ID_LABELING_MODIFYPOINTS:
 		  SelectDot = !SelectDot;
 		  PlaceDot = FALSE;
-		  DeleteDot = FALSE;
+		  DeleteDot = FALSE; 
+		  UpdateMode(ID_LABELING_MODIFYPOINTS, SelectDot);
 		  break;
 	  
 	  case ID_LABELING_DELETEPOINTS:
 		  PlaceDot = FALSE;
 		  SelectDot = FALSE;
 		  DeleteDot = !DeleteDot;
+		  UpdateMode(ID_LABELING_DELETEPOINTS, DeleteDot);
 		  break;
 
 	  case ID_QUIT:
@@ -351,6 +354,15 @@ switch (uMsg)
 	if (((TCHAR)wParam == 'i') || ((TCHAR)wParam == 'I')) /* interpolate the current frames to the next set of frames */
 	{
 		InterpolateFrames();
+		if (InterruptError == TRUE)
+		{
+			sprintf(text, "Error!\n-------------------------------------------------\n");
+			strcat(text, "More than 2 points have lost tracking.\n");
+			strcat(text, "This occurs when 2 points reach the edge of the screen.\n");
+			strcat(text, "Modify or delete points and then interpolate again.\n");
+			MessageBox(hWnd, (LPCSTR)text, (LPCSTR)"Interpolation Interrupted!", MB_OK | MB_APPLMODAL);
+			InterruptError = FALSE;
+		}
 	}
 	if (((TCHAR)wParam == 'p') || ((TCHAR)wParam == 'P'))	  /* play a step -- from 1 seconds before, to 1 second after current time */
 	  {

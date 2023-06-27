@@ -19,12 +19,14 @@ using namespace cv;
 using namespace std;
 
 bool VideoLoaded{ FALSE };			/* 0=>no; 1=>yes (file exists and is opened in ffmpeg library) */
+bool InterruptError{ FALSE };
 unsigned char* disp_image;			/* image from video to display */
 int			  DISPLAY_ROWS{ 0 };			/* size of video image */
 int			  DISPLAY_COLS{ 0 };			/* size of video image */
 VideoCapture  capture;
 int			  TotalData;			/* total #samples in the accelerometer data file */
 int			  nFrames{150};
+
 //Mat img;
 
 void ResizeFrame(Mat* img);
@@ -80,11 +82,18 @@ void InterpolateFrames() /* Repeat set points to a certain amount of frames. Lat
 	double dx = 0;
 
 	/* new addition 5/8/2023 */
-	int lostP_inc = 0;
+	int lostP_inc = 0; // amount of points that need manual adjustment
 	uint i;
 	HDC hDC;
 	char text[100];
 	int KLTFrameIndex{ FrameIndex };
+
+	/* new addition 6/25/2023 */
+	int Ymax = 700; // Ymin is set to MaxValue-KLTWindowSize = 720-15 = 705
+	int Xmax;
+	float slope, y_intercept;
+
+
 
 	if (pointData[FrameIndex].point_count < 1)
 	{
@@ -106,13 +115,12 @@ void InterpolateFrames() /* Repeat set points to a certain amount of frames. Lat
 		p0[i] = Point2f(pointData[FrameIndex].x[i], pointData[FrameIndex].y[i]);
 	}
 
+	hDC = GetDC(MainWnd);
 	// forward interpolation
 	while (iteration <= nFrames)
 	{
-		hDC = GetDC(MainWnd);
-		sprintf(text, "Interpolating Frame %d/%d  ", KLTFrameIndex-FrameIndex, nFrames);
-		TextOut(hDC, DISPLAY_COLS + 20, 250, (LPCSTR)text, strlen(text));
-		ReleaseDC(MainWnd, hDC);
+		sprintf(text, "Interpolating Frame %d/%d      ", KLTFrameIndex-FrameIndex, nFrames);
+		TextOut(hDC, DISPLAY_COLS + 20, 270, (LPCSTR)text, strlen(text));
 
 		Mat frame, frame_gray;
 		capture.set(CAP_PROP_POS_FRAMES, KLTFrameIndex);
@@ -139,11 +147,18 @@ void InterpolateFrames() /* Repeat set points to a certain amount of frames. Lat
 			else
 			{
 				lostP_inc++;
+				continue;
 			}
+			if ( (p0[i].y > Ymax-10) && (i > 0) )
+			{
+				lostP_inc++;
+			}
+			
 		}
-		if (lostP_inc > 1)
+		if (lostP_inc > 0)
 		{
-			DeletePoint(pointData[KLTFrameIndex-1].x[0], pointData[KLTFrameIndex-1].x[0]);
+			//DeletePoint(pointData[KLTFrameIndex-1].x[0], pointData[KLTFrameIndex-1].x[0]);
+			InterruptError = TRUE;
 			break;
 		}
 
@@ -151,15 +166,36 @@ void InterpolateFrames() /* Repeat set points to a certain amount of frames. Lat
 		old_gray = frame_gray.clone();
 		p0 = good_new;
 
+		// Correct the first point if needed
+		if ( (p0[0].y > Ymax) && (p0.size() > 1) )
+		{
+			if (p0[0].x == p0[1].x)
+			{
+				Xmax = p0[0].x;
+			}
+			else
+			{
+				slope = (p0[1].y - p0[0].y) / (p0[1].x - p0[0].x);
+				y_intercept = p0[1].y - slope * p0[1].x;
+				Xmax = round( ((Ymax - y_intercept) / slope) );
+			}
+			p0[0].x = Xmax;
+			p0[0].y = Ymax;
+		}
 
+		// Fix points that drop off from KLT Tracking and record data
 		pointData[KLTFrameIndex].point_count = 0;
 		for (i = 0; i < p0.size(); i++)
 		{
 			if ( (lostP_inc == 1) && (i == 0) )
 			{
+				/* The value for X is tracked heuristically when needed */
 				dx = p0[i].x - pointData[KLTFrameIndex-1].x[1];
-				pointData[KLTFrameIndex].x[0] = round(pointData[KLTFrameIndex-1].x[0]+(0.5)*dx);
-				pointData[KLTFrameIndex].y[0] = DISPLAY_ROWS;
+				pointData[KLTFrameIndex].x[0] = round(pointData[KLTFrameIndex-1].x[0]+(0.75)*dx);
+
+				/* If point is lost, then it is set to the bottom*/
+				//pointData[KLTFrameIndex].y[0] = DISPLAY_ROWS;
+				pointData[KLTFrameIndex].y[0] = Ymax;
 				pointData[KLTFrameIndex].point_count++;
 			}
 			if (lostP_inc == 1)
@@ -178,6 +214,7 @@ void InterpolateFrames() /* Repeat set points to a certain amount of frames. Lat
 		iteration++;
 		KLTFrameIndex++;
 	}
+	ReleaseDC(MainWnd, hDC);
 }
 
 void ResizeFrame(Mat *img)
