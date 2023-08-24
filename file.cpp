@@ -119,7 +119,7 @@ void InterpolateFrames() /* Repeat set points to a certain amount of frames. Lat
 	// forward interpolation
 	while (iteration <= nFrames)
 	{
-		sprintf(text, "Interpolating Frame %d/%d      ", KLTFrameIndex-FrameIndex, nFrames);
+		sprintf(text, "Interpolating Frame %d/%d   ", KLTFrameIndex-FrameIndex, nFrames);
 		TextOut(hDC, DISPLAY_COLS + 20, 270, (LPCSTR)text, strlen(text));
 
 		Mat frame, frame_gray;
@@ -157,7 +157,6 @@ void InterpolateFrames() /* Repeat set points to a certain amount of frames. Lat
 		}
 		if (lostP_inc > 0)
 		{
-			//DeletePoint(pointData[KLTFrameIndex-1].x[0], pointData[KLTFrameIndex-1].x[0]);
 			InterruptError = TRUE;
 			break;
 		}
@@ -213,6 +212,157 @@ void InterpolateFrames() /* Repeat set points to a certain amount of frames. Lat
 
 		iteration++;
 		KLTFrameIndex++;
+	}
+	ReleaseDC(MainWnd, hDC);
+
+}
+
+/* added 8/14/2023 */
+void InterpolateFramesBackwards()
+{
+	static int nFeatures = 10; /* 10 is the max amount of points allowed to place */
+
+	int iteration = 1;
+	double dx = 0;
+
+	/* new addition 5/8/2023 */
+	int lostP_inc = 0; // amount of points that need manual adjustment
+	uint i;
+	HDC hDC;
+	char text[100];
+	int KLTFrameIndex{ FrameIndex-1 };
+
+	/* new addition 6/25/2023 */
+	int Ymax = 700; // Ymin is set to MaxValue-KLTWindowSize = 720-15 = 705
+	int Xmax;
+	float slope, y_intercept;
+
+	/* new addition 8/14/2023 */
+	int iterationsNeeded = 0;
+	float slope_inc = 0;
+	float backwards_weight = 0;
+	float forwards_weight = 0;
+
+
+	/* Do not interpolate if: 
+		1) there are no points
+		2) user is working on first frame
+		3) if user has changed the amount of points */
+	if ( (pointData[FrameIndex].point_count < 1) || (FrameIndex == 0) || (pointData[FrameIndex].point_count != pointData[KLTFrameIndex].point_count) )
+	{
+		return;
+	}
+
+	Mat old_frame, old_gray;
+	//capture >> old_frame;
+	capture.set(CAP_PROP_POS_FRAMES, KLTFrameIndex);
+	capture.read(old_frame);
+	ResizeFrame(&old_frame);
+
+
+	//KLTFrameIndex++;
+	cvtColor(old_frame, old_gray, COLOR_BGR2GRAY);
+	vector<Point2f> p0(pointData[FrameIndex].point_count), p1(pointData[FrameIndex].point_count);
+	for (i = 0; i < pointData[FrameIndex].point_count; i++)
+	{
+		p0[i] = Point2f(pointData[FrameIndex].x[i], pointData[FrameIndex].y[i]);
+	}
+
+	while (pointData[KLTFrameIndex].manual == false) 
+	{
+		iterationsNeeded++;
+		KLTFrameIndex--;
+	}
+	slope_inc = 1.0 / (float(iterationsNeeded) + 1.0);
+	KLTFrameIndex = FrameIndex - 1;
+	backwards_weight = 1 - slope_inc;
+	forwards_weight = 1 - backwards_weight;
+
+
+	hDC = GetDC(MainWnd);
+	// backwards interpolation
+	while (iteration <= iterationsNeeded)
+	{
+		sprintf(text, "Interpolating Frame %d/%d   ", iteration, iterationsNeeded);
+		TextOut(hDC, DISPLAY_COLS + 20, 270, (LPCSTR)text, strlen(text));
+
+		Mat frame, frame_gray;
+		capture.set(CAP_PROP_POS_FRAMES, KLTFrameIndex);
+		capture.read(frame);
+		ResizeFrame(&frame);
+		if (frame.empty())
+			break;
+		cvtColor(frame, frame_gray, COLOR_BGR2GRAY);
+
+		// calculate optical flow
+		vector<uchar> status;
+		vector<float> err;
+		TermCriteria criteria = TermCriteria((TermCriteria::COUNT)+(TermCriteria::EPS), 10, 0.03);
+		calcOpticalFlowPyrLK(old_gray, frame_gray, p0, p1, status, err, Size(15, 15), 2, criteria);
+
+		vector<Point2f> good_new;
+		for (i = 0; i < p0.size(); i++)
+		{
+			// Select good points
+			if (status[i] == 1) {
+				good_new.push_back(p1[i]);
+
+			}
+			else
+			{
+				lostP_inc++;
+				continue;
+			}
+			if ((p0[i].y > Ymax - 10) && (i > 0))
+			{
+				lostP_inc++;
+			}
+
+		}
+		if (lostP_inc > 0)
+		{
+			//DeletePoint(pointData[KLTFrameIndex-1].x[0], pointData[KLTFrameIndex-1].x[0]);
+			InterruptError = TRUE;
+			break;
+		}
+
+		// Now update the previous frame and previous points
+		old_gray = frame_gray.clone();
+		p0 = good_new;
+
+		// Correct the first point if needed by setting the Y-value to a set max value then solve for X
+		if ((p0[0].y > Ymax) && (p0.size() > 1)) // checks if point has y-value greater than threshold that can stop interpolation
+		{
+			if (p0[0].x == p0[1].x) // checks if the x values between the first and second point are the same
+			{
+				Xmax = p0[0].x;
+			}
+			else
+			{
+				slope = (p0[1].y - p0[0].y) / (p0[1].x - p0[0].x);
+				y_intercept = p0[1].y - slope * p0[1].x;
+				Xmax = round(((Ymax - y_intercept) / slope));
+			}
+			p0[0].x = Xmax;
+			p0[0].y = Ymax;
+		}
+
+		// Fix points that drop off from KLT Tracking and record data
+		//pointData[KLTFrameIndex].point_count = 0;
+		for (i = 0; i < p0.size(); i++)
+		{
+			//pointData[KLTFrameIndex].x[i] = round(p0[i].x);
+			//pointData[KLTFrameIndex].y[i] = round(p0[i].y);
+			pointData[KLTFrameIndex].x[i] = round(p0[i].x * backwards_weight + pointData[KLTFrameIndex].x[i] * forwards_weight);
+			pointData[KLTFrameIndex].y[i] = round(p0[i].y * backwards_weight + pointData[KLTFrameIndex].y[i] * forwards_weight);
+		}
+		//pointData[KLTFrameIndex].point_count += (int)p0.size();
+		pointData[KLTFrameIndex].point_count = (int)p0.size();
+
+		iteration++;
+		KLTFrameIndex--;
+		backwards_weight -= slope_inc;
+		forwards_weight += slope_inc;
 	}
 	ReleaseDC(MainWnd, hDC);
 }

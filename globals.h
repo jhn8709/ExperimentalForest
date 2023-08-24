@@ -16,6 +16,7 @@
 	void		DeletePoint(int x_change, int y_change);
 	void		LoadNextFrame();
 	void		InterpolateFrames();
+	void		InterpolateFramesBackwards();
 	//void		DataToCSV();
 	void		LoadCSVData(char* file_name);
 	void		UpdateMode(int mode, int flag);
@@ -68,11 +69,16 @@ extern int           selected_point;		/* indices of the point closest to where t
 //extern int           px[2400][10], py[2400][10];       /* arrays to hold x and y coordinates of the points */
 //extern int		     PointTotals[2400];
 
+/* int x -> x coordinates for points on a frame up to 10 points 
+   int y -> y coordinates for points on a frame up to 10 points
+   int point_count -> number of points placed on a frame
+   bool manual -> indicates whether a frame was worked on manually or automatically (false = automatic) */
 struct GroundTruth
 {
 	int x[10];
 	int y[10];
 	int point_count{0};
+	bool manual = false;
 };
 
 

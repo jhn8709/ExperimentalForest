@@ -266,6 +266,7 @@ void LoadNextFrame()
 {
 	int X, Y;
 
+
 	/* Display points and lines that are already recorded for this frame without recording anything new. */
 	for (int i = 0; i < pointData[FrameIndex].point_count; i++)
 	{

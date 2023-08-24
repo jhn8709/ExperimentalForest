@@ -24,6 +24,7 @@ bool SelectDot{ FALSE };				/* 0=>no; 1=>yes (program will detect closest point 
 bool changeFFSpeed{ FALSE };
 bool changeInterpolationLength{ FALSE };
 bool saveIndicator{ FALSE };
+bool interpolateBackward{ FALSE }; /* controls backwards interpolation process */
 
 char		  DataFilename[320];	/* file that contains the accelerometer data (synchronized and collated at 15 Hz) */
 char		  CurrentPath[320];		/* path where files were last read/saved */
@@ -241,6 +242,9 @@ switch (uMsg)
 		  pointData[FrameIndex].y[selected_point] = ymouse;
 		  DrawPoint(xmouse, ymouse, 1);
 		  ModifyDot = 0;  // stop the point moving process
+		  pointData[FrameIndex].manual = true;
+		  interpolateBackward = true;
+
 	  }
 	  // initiate point fixing
 	  else if ((SelectDot == TRUE) || (DeleteDot == TRUE))
@@ -249,7 +253,10 @@ switch (uMsg)
 		  {
 			  ModifyDot = TRUE;
 		  }
+		  pointData[FrameIndex].manual = true;
+		  interpolateBackward = true;
 		  //for (i = 0; i < PointTotals[FrameIndex]; i++)
+		  /* find closest point to pixel clicked and then select for modifying */
 		  for (i = 0; i < pointData[FrameIndex].point_count; i++)
 		  {
 			  dist = sqrt((double)SQR(pointData[FrameIndex].x[i] - xmouse)
@@ -265,11 +272,13 @@ switch (uMsg)
 			  }
 		  }
 	  }
+	  /* Draw point and create line between points */
 	  if ((PlaceDot == TRUE) && (ModifyDot == FALSE))
 	  {
 		  //RecordAction(xmouse, ymouse, 2);
 		  DrawPoint(xmouse, ymouse, 2);
 		  //if (PointTotals[TimeIndex] > 0)
+		  pointData[FrameIndex].manual = true;
 		  if (pointData[FrameIndex].point_count > 0)
 		  {
 			  DrawLine(pointData[FrameIndex].x[pointData[FrameIndex].point_count-1], pointData[FrameIndex].y[pointData[FrameIndex].point_count - 1],
@@ -281,6 +290,7 @@ switch (uMsg)
 	  {
 		  //RecordAction(xchange, ychange, 0);
 		  DeletePoint(xchange, ychange);
+		  pointData[FrameIndex].manual = true;
 	  }
 	  return(DefWindowProc(hWnd, uMsg, wParam, lParam));
 	  break;
@@ -354,6 +364,8 @@ switch (uMsg)
 	if (((TCHAR)wParam == 'i') || ((TCHAR)wParam == 'I')) /* interpolate the current frames to the next set of frames */
 	{
 		InterpolateFrames();
+		interpolateBackward = true;
+		InterpolateFramesBackwards(); // added 8/14/2023
 		if (InterruptError == TRUE)
 		{
 			sprintf(text, "Error!\n-------------------------------------------------\n");
@@ -451,8 +463,13 @@ return(0L);
 		/* moves the TimeIndex according to PlayJump, then calls PaintImage() */
 
 void UpdateDisplay()
-
 {
+/* added 8/14/2023 */
+if ( (pointData[FrameIndex].manual == true) && (interpolateBackward == true) )
+{
+	interpolateBackward = false;
+	InterpolateFramesBackwards(); // change so this only happens right after a frame is adjused (create a flag), not everytime an adjusted frame is scrolled past.
+}
 if (FrameIndex+PlayJump < 0  ||  FrameIndex+PlayJump >= TotalData)
   {
   if (FrameIndex+PlayJump < 0)
