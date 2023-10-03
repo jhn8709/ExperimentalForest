@@ -25,6 +25,7 @@ bool changeFFSpeed{ FALSE };
 bool changeInterpolationLength{ FALSE };
 bool saveIndicator{ FALSE };
 bool interpolateBackward{ FALSE }; /* controls backwards interpolation process */
+bool disableBackInterp{ FALSE };
 
 char		  DataFilename[320];	/* file that contains the accelerometer data (synchronized and collated at 15 Hz) */
 char		  CurrentPath[320];		/* path where files were last read/saved */
@@ -180,6 +181,10 @@ switch (uMsg)
 		  changeInterpolationLength = FALSE;
 		  break;
 
+	  case ID_SETTINGS_DISABLEBACKWARDSINTERPOLATION:
+		  disableBackInterp = !disableBackInterp;
+		  break;
+
 
 	  case ID_HELP_KEYS:
 		sprintf(text,"Key(s)\tAction(s)\n-------------------------------------------------\n");
@@ -237,14 +242,19 @@ switch (uMsg)
 	  // select location where the fixed point is placed
 	  if (ModifyDot == TRUE)
 	  {
-		  //RecordAction(pointData[FrameIndex].x[selected_point], pointData[FrameIndex].y[selected_point], 1);
 		  pointData[FrameIndex].x[selected_point] = xmouse;
 		  pointData[FrameIndex].y[selected_point] = ymouse;
 		  DrawPoint(xmouse, ymouse, 1);
-		  ModifyDot = 0;  // stop the point moving process
+		  ModifyDot = FALSE;  // stop the point moving process
 		  pointData[FrameIndex].manual = true;
 		  interpolateBackward = true;
 
+		  //if ( (ymouse >= HORIZON) && (ymouse <= 720) )
+		  //{
+			 // pointData[FrameIndex].human_x[ymouse - HORIZON] = xmouse;
+			 // fill(pointData[FrameIndex].human_x.begin(), pointData[FrameIndex].human_x.end(), -1);
+			 // //storeGTData(pointData[FrameIndex].human_x);
+		  //}
 	  }
 	  // initiate point fixing
 	  else if ((SelectDot == TRUE) || (DeleteDot == TRUE))
@@ -255,7 +265,6 @@ switch (uMsg)
 		  }
 		  pointData[FrameIndex].manual = true;
 		  interpolateBackward = true;
-		  //for (i = 0; i < PointTotals[FrameIndex]; i++)
 		  /* find closest point to pixel clicked and then select for modifying */
 		  for (i = 0; i < pointData[FrameIndex].point_count; i++)
 		  {
@@ -275,22 +284,32 @@ switch (uMsg)
 	  /* Draw point and create line between points */
 	  if ((PlaceDot == TRUE) && (ModifyDot == FALSE))
 	  {
-		  //RecordAction(xmouse, ymouse, 2);
+		  removeDeletedPoint();
 		  DrawPoint(xmouse, ymouse, 2);
-		  //if (PointTotals[TimeIndex] > 0)
 		  pointData[FrameIndex].manual = true;
-		  if (pointData[FrameIndex].point_count > 0)
-		  {
-			  DrawLine(pointData[FrameIndex].x[pointData[FrameIndex].point_count-1], pointData[FrameIndex].y[pointData[FrameIndex].point_count - 1],
-				  pointData[FrameIndex].x[pointData[FrameIndex].point_count], pointData[FrameIndex].y[pointData[FrameIndex].point_count], 1);
-		  } 
+		  interpolateBackward = true;
+		  //if ((ymouse >= HORIZON) && (ymouse <= 720))
+		  //{
+			 // pointData[FrameIndex].human_x[ymouse - HORIZON] = xmouse;
+		  //}
+
 		  pointData[FrameIndex].point_count += 1;
+		  if (pointData[FrameIndex].point_count > 1)
+		  {
+			  DrawLine(pointData[FrameIndex].x[pointData[FrameIndex].point_count - 2], pointData[FrameIndex].y[pointData[FrameIndex].point_count - 2],
+				  pointData[FrameIndex].x[pointData[FrameIndex].point_count - 1], pointData[FrameIndex].y[pointData[FrameIndex].point_count - 1], 1);
+			  //storeGTData(pointData[FrameIndex].human_x);
+		  }
 	  }
 	  if (DeleteDot == TRUE)
 	  {
 		  //RecordAction(xchange, ychange, 0);
 		  DeletePoint(xchange, ychange);
 		  pointData[FrameIndex].manual = true;
+		  //fill(pointData[FrameIndex].human_x.begin(), pointData[FrameIndex].human_x.end(), -1);
+		  //storeGTData(pointData[FrameIndex].human_x);
+		  saveDeletedPoint(selected_point);
+		  
 	  }
 	  return(DefWindowProc(hWnd, uMsg, wParam, lParam));
 	  break;
@@ -364,7 +383,7 @@ switch (uMsg)
 	if (((TCHAR)wParam == 'i') || ((TCHAR)wParam == 'I')) /* interpolate the current frames to the next set of frames */
 	{
 		InterpolateFrames();
-		interpolateBackward = true;
+		interpolateBackward = false;
 		InterpolateFramesBackwards(); // added 8/14/2023
 		if (InterruptError == TRUE)
 		{
@@ -470,6 +489,8 @@ if ( (pointData[FrameIndex].manual == true) && (interpolateBackward == true) )
 	interpolateBackward = false;
 	InterpolateFramesBackwards(); // change so this only happens right after a frame is adjused (create a flag), not everytime an adjusted frame is scrolled past.
 }
+/* added 9/7/2023 */
+saveDeletedPointsInit();
 if (FrameIndex+PlayJump < 0  ||  FrameIndex+PlayJump >= TotalData)
   {
   if (FrameIndex+PlayJump < 0)
@@ -505,18 +526,20 @@ void DataToCSV()
 	FILE* fpt;
 	int i=0 , j;
 
+
 	fpt = fopen("GroundTruth.csv", "w+");
 	if (fpt == NULL) 
 	{
 		// Handle the case when fopen fails
 		return;
 	}
-	fprintf(fpt, "Frame,#ofPoints,X1,Y1,X2,Y2,X3,Y3,X4,Y4,X5,Y5,X6,Y6,X7,Y7,X8,Y8,X9,Y9,X10,Y10\n");
+	fprintf(fpt, "Frame,#ofPoints,ManualInput,X1,Y1,X2,Y2,X3,Y3,X4,Y4,X5,Y5,X6,Y6,X7,Y7,X8,Y8,X9,Y9,X10,Y10\n");
 	//fprintf(fpt, "\n");
 	for (i = 0; i <= TotalData; i++)
 	{
 		fprintf(fpt, "%d", i);
 		fprintf(fpt, ",%d", pointData[i].point_count);
+		fprintf(fpt, ",%d", pointData[i].manual);
 		for (j = 0; j < 10; j++)
 		{
 			if (j < pointData[i].point_count)

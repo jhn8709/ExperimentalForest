@@ -13,15 +13,43 @@
 #include "resource.h"
 
 //#include <opencv2/video.hpp>
-
+using namespace std;
 
 int          selected_point;		/* indices of the point closest to where the user has clicked */
-
 GroundTruth *pointData;
+//int			*deletedPointsIndexes;
+vector<int>	deletedPointsIndexes;
+int			deletedPointsCount;
 
 void AllocateStruct(int frame_count)
 {
-	pointData = (GroundTruth*)calloc(frame_count, sizeof(GroundTruth));
+	//pointData = (GroundTruth*)calloc(frame_count, sizeof(GroundTruth));
+	pointData = new GroundTruth[frame_count];
+	if (pointData == nullptr) {
+		cout << "Failure to allocate!" << "\n";
+	}
+}
+
+void saveDeletedPointsInit()
+{
+	//deletedPointsIndexes = (int*)calloc(10, sizeof(int));
+	deletedPointsIndexes.clear();
+	//deletedPointsCount = 0;
+}
+
+void saveDeletedPoint(int index)
+{
+	//deletedPointsIndexes[deletedPointsCount] = index;
+	//deletedPointsCount++;
+	deletedPointsIndexes.push_back(index);
+}
+
+void removeDeletedPoint()
+{
+	// Remove the last element from the vector
+	if (!deletedPointsIndexes.empty()) {
+		deletedPointsIndexes.pop_back();
+	}
 }
 
 void PaintImage()
@@ -376,11 +404,11 @@ void LoadCSVData(char *file_name)
 	{
 		exit(0);
 	}
-	fscanf(fpt, "%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s");
+	fscanf(fpt, "%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s");
 	fscanf(fpt, "\n");
 	while (frame < TotalData)
 	{
-		fscanf(fpt, "%d,%d", &frame_number, &pointData[frame].point_count);
+		fscanf(fpt, "%d,%d,%d", &frame_number, &pointData[frame].point_count, &pointData[frame].manual);
 		for (i = 0; i < 10; i++)
 		{
 			if (i < pointData[frame].point_count)
@@ -425,4 +453,70 @@ void UpdateMode(int mode, int flag) /* new addition 5/26/2023 */
 	TextOut(hDC, DISPLAY_COLS + 20, 250, (LPCSTR)text, strlen(text));
 
 	ReleaseDC(MainWnd, hDC);
+}
+
+void storeGTData(vector<int>& xVector)
+{
+	int point_count{ pointData[FrameIndex].point_count };
+	int i{ 1 };
+
+	if (point_count < 2)
+	{
+		return;
+	}
+
+	while (i < point_count)
+	{
+		FillGT(pointData[FrameIndex].x[i - 1], pointData[FrameIndex].y[i - 1],
+			pointData[FrameIndex].x[i - 0], pointData[FrameIndex].y[i - 0], xVector);
+		i++;
+	}
+
+
+}
+
+void storeGTInterpolationData(vector<int>& xVector, int *xvals, int *yvals, int frameIndex)
+{
+	int i{ 1 };
+	if (pointData[frameIndex].point_count < 2)
+	{
+		return;
+	}
+
+	while (i < pointData[frameIndex].point_count)
+	{
+		FillGT(xvals[i - 1], yvals[i - 1],
+			xvals[i], yvals[i], xVector);
+		i++;
+	}
+}
+
+void FillGT(int startX, int startY, int endX, int endY, vector<int>& xVector)// int mode)
+{
+	int dx, dy;
+	int steps;
+	double Xinc, Yinc, X, Y;
+	HDC		hDC;
+
+	dx = endX - startX;
+	dy = endY - startY;
+	steps = (abs(dx) > abs(dy)) ? abs(dx) : abs(dy);  // if magnitude of dx is larger than dy then steps = dx; steps = dy otherwise
+	Xinc = dx / (float)steps;
+	Yinc = dy / (float)steps;
+
+	X = startX;
+	Y = startY;
+
+	for (int i = 0; i <= steps; i++)
+	{
+
+		if ( (Y > DISPLAY_ROWS) || (Y < HORIZON) )
+		{
+			continue;
+		}
+		xVector[round(Y) - HORIZON] = X;
+
+		X += Xinc;
+		Y += Yinc;
+	}
 }
