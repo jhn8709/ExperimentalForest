@@ -13,3 +13,5 @@ Use this link to help import OpenCV libraries.
 https://learn.microsoft.com/en-us/cpp/build/walkthrough-creating-and-using-a-dynamic-link-library-cpp?view=msvc-170
 
 From the "To add the DLL header to your include path" and the "To add the DLL import library to your project" sections should help.
+
+Make sure to place the OpenCV extracted files in C:\opencv\opencv
