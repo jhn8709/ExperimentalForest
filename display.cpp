@@ -413,13 +413,17 @@ void LoadCSVData(char *file_name)
 	fscanf(fpt, "\n");
 
 	if (compareReady) {
+		pointData_2 = new GroundTruth[TotalData];
+		if (pointData == nullptr) {
+			cout << "Failure to allocate!" << "\n";
+		}
 		while (frame < TotalData)
 		{
-			fscanf(fpt, "%d,%d,%d", &frame_number, &pointData[frame].point_count, &pointData[frame].manual);
+			fscanf(fpt, "%d,%d,%d", &frame_number, &pointData_2[frame].point_count, &pointData_2[frame].manual);
 
 			for (i = 0; i < 10; i++) {
-				if (i < pointData[frame].point_count) {
-					fscanf(fpt, ",%d,%d", &pointData[frame].x[i], &pointData[frame].y[i]);
+				if (i < pointData_2[frame].point_count) {
+					fscanf(fpt, ",%d,%d", &pointData_2[frame].x[i], &pointData_2[frame].y[i]);
 				}
 				else {
 					fscanf(fpt, ",%*s,%*s");
