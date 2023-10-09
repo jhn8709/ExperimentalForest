@@ -65,6 +65,7 @@ extern bool			  changeInterpolationLength;
 extern bool			  saveIndicator;
 extern bool			  InterruptError;
 extern bool			  disableBackInterp;
+extern bool			  compareReady;
 
 
 /* Newer additions 4/2/2023 */
@@ -97,6 +98,7 @@ extern int           selected_point;		/* indices of the point closest to where t
    Each frame will store values from the bottom to the horizon. For this program, we are only
    using 1280x720 video so each path will be at maximum 720-horizon pixels long. */
 #define HORIZON 275 
+
 struct GroundTruth
 {
 	/* The y-values are not being tracked in the ground truth. Since we will have record 
@@ -108,6 +110,7 @@ struct GroundTruth
 	//int forward_interpX[420];
 	//int backwards_interpX[420];
 	//int final_x[420];
+
 	int x[10]; /* Holds x-values for display points (up to 10 points) */
 	int y[10]; /* Holds y-values for display points */
 	int point_count{ 0 }; /* Stores the amount of display points */
@@ -128,5 +131,5 @@ struct GroundTruth
 };
 
 
-extern GroundTruth *pointData;
+extern GroundTruth *pointData; // Extending global variable pointData defined on display.cpp
 

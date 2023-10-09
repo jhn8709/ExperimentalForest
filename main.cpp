@@ -110,15 +110,14 @@ OPENFILENAME	ofn;
 char			text[320];
 /* Newer additions 4/2/2023 */
 double			dist, local_min = 10000;
-fs::path filePath;
+fs::path		filePath;
 HDC				hDC;
 
 
 switch (uMsg)
   {
-  case WM_COMMAND:
-	switch (LOWORD(wParam))
-	  {
+  case WM_COMMAND:	// Menu Items
+	switch (LOWORD(wParam)) {
 	  case ID_FILE_LOAD:
 		memset(&(ofn),0,sizeof(ofn));
 		ofn.lStructSize=sizeof(ofn);
@@ -141,16 +140,6 @@ switch (uMsg)
 		CurrentPath[i]='\0';
 		SetCurrentDirectory((LPCTSTR)CurrentPath);
 		
-		/*if (VideoLoaded)
-		  {
-		  if (disp_image != NULL)
-			{
-			free(disp_image);
-			disp_image=NULL;
-			}
-		  CloseVideoFile();
-		  }*/
-		//InitializeDataVariables();
 		if (filePath.extension() == ".mp4") // Heed the dot.
 		{
 			ReadVideo(DataFilename);
@@ -158,15 +147,14 @@ switch (uMsg)
 		else if (filePath.extension() == ".csv")
 		{
 			LoadCSVData(DataFilename);
+			compareReady = TRUE;
 		}
-
 
 		//ReadVideo(DataFilename);
 		sprintf(text, "Data Labeling   %s", DataFilename);
 		SetWindowText(hWnd,(LPCSTR)text);
 		PaintImage();
 		break;
-
 	 
 	  case ID_EDIT_FF_SPEED:
 		changeFFSpeed = TRUE;
@@ -216,23 +204,19 @@ switch (uMsg)
 		  UpdateMode(ID_LABELING_DELETEPOINTS, DeleteDot);
 		  break;
 
+	  case ID_COMPARE: // Comparing labels from two different labelers
+		  
+		  break;
+
 	  case ID_QUIT:
-		if (VideoLoaded)
-		  {
-		  /*if (disp_image != NULL)
-			{
-			free(disp_image);
-			disp_image=NULL;
-			}*/
-		  //CloseVideoFile();
+		if (VideoLoaded) {
 		  VideoLoaded=0;
 		  }
 
 		Sleep(100);
 		DestroyWindow(hWnd);
 		break;
-		
-	  }
+	}
 	break;
 
   case WM_LBUTTONDOWN:
@@ -417,7 +401,6 @@ switch (uMsg)
   case WM_KEYDOWN:
 	  switch (wParam)
 	  {
-
 		case (VK_DELETE): /* Enable deleting points */
 			PostMessage(MainWnd, WM_COMMAND, ID_LABELING_DELETEPOINTS, 0);
 			break;
@@ -432,11 +415,9 @@ switch (uMsg)
 			{
 				PostMessage(MainWnd, WM_COMMAND, ID_QUIT, 0);
 			}
-			
-			break;
-			
+		   break;
 	  }
-	  break;
+	break;
 
   case WM_SIZE:
 	if (hWnd != hWnd  ||  GetUpdateRect(hWnd,NULL,FALSE) == 0)
@@ -477,48 +458,43 @@ return(0L);
 }
 
 
-
-
 		/* moves the TimeIndex according to PlayJump, then calls PaintImage() */
 
-void UpdateDisplay()
-{
-/* added 8/14/2023 */
-if ( (pointData[FrameIndex].manual == true) && (interpolateBackward == true) )
-{
-	interpolateBackward = false;
-	InterpolateFramesBackwards(); // change so this only happens right after a frame is adjused (create a flag), not everytime an adjusted frame is scrolled past.
-}
+void UpdateDisplay() {
+	/* added 8/14/2023 */
+	if ( (pointData[FrameIndex].manual == true) && (interpolateBackward == true) )
+	{
+		interpolateBackward = false;
+		InterpolateFramesBackwards(); // change so this only happens right after a frame is adjused (create a flag), not everytime an adjusted frame is scrolled past.
+	}
+
 /* added 9/7/2023 */
 saveDeletedPointsInit();
-if (FrameIndex+PlayJump < 0  ||  FrameIndex+PlayJump >= TotalData)
-  {
-  if (FrameIndex+PlayJump < 0)
-	FrameIndex=0;
-  else
-	FrameIndex=TotalData-1;
-  if (Playing == 1)		  /* halt play if reached either start or end */
-	{
-	KillTimer(MainWnd,TIMER_SECOND);
-	Playing=0;
-	}
-  }
-else
-  {
-  FrameIndex+=PlayJump;
-  //undo.actions_made = 0;
-  }
-PaintImage();
 
+	if (FrameIndex+PlayJump < 0  ||  FrameIndex+PlayJump >= TotalData) {
+	  if (FrameIndex+PlayJump < 0)
+		FrameIndex=0;
+	  else
+		FrameIndex=TotalData-1;
+	  if (Playing == 1)		  /* halt play if reached either start or end */
+		{
+		KillTimer(MainWnd,TIMER_SECOND);
+		Playing=0;
+		}
+	  }
+	else {
+	  FrameIndex+=PlayJump;
+	  //undo.actions_made = 0;
+	  }
+
+PaintImage();
 }
 
 
-void InitializeDataVariables()
-
-{
-Playing=0;
-PlayJump=1;
-PlayCountdown=0;
+void InitializeDataVariables() {
+	Playing=0;
+	PlayJump=1;
+	PlayCountdown=0;
 }
 
 void DataToCSV()

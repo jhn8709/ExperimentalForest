@@ -18,14 +18,14 @@
 using namespace cv;
 using namespace std;
 
-bool VideoLoaded{ FALSE };			/* 0=>no; 1=>yes (file exists and is opened in ffmpeg library) */
-bool InterruptError{ FALSE };
-unsigned char* disp_image;			/* image from video to display */
-int			  DISPLAY_ROWS{ 0 };			/* size of video image */
-int			  DISPLAY_COLS{ 0 };			/* size of video image */
-VideoCapture  capture;
-int			  TotalData;			/* total #samples in the accelerometer data file */
-int			  nFrames{150};
+bool			VideoLoaded{ FALSE };		/* 0=>no; 1=>yes (file exists and is opened in ffmpeg library) */
+bool			InterruptError{ FALSE };
+unsigned char*	disp_image;					/* image from video to display */
+int				DISPLAY_ROWS{ 0 };			/* size of video image */
+int				DISPLAY_COLS{ 0 };			/* size of video image */
+VideoCapture	capture;
+int				TotalData;					/* total frames from the video file */
+int				nFrames{150};
 
 //Mat img;
 

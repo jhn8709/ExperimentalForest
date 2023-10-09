@@ -16,10 +16,12 @@
 using namespace std;
 
 int          selected_point;		/* indices of the point closest to where the user has clicked */
-GroundTruth *pointData;
+GroundTruth *pointData;  // Groud Truth storing the labels
+GroundTruth* pointData_2;
 //int			*deletedPointsIndexes;
 vector<int>	deletedPointsIndexes;
 int			deletedPointsCount;
+bool		compareReady{FALSE};
 
 void AllocateStruct(int frame_count)
 {
@@ -136,6 +138,8 @@ switch(uMsg)
 		  SetDlgItemText(hDlg, IDC_EDIT1, (LPCSTR)text);
 		  break;
 	  }
+	  break;
+
   case WM_COMMAND:
 	switch(LOWORD(wParam))
 	{
@@ -404,28 +408,44 @@ void LoadCSVData(char *file_name)
 	{
 		exit(0);
 	}
+
 	fscanf(fpt, "%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s");
 	fscanf(fpt, "\n");
-	while (frame < TotalData)
-	{
-		fscanf(fpt, "%d,%d,%d", &frame_number, &pointData[frame].point_count, &pointData[frame].manual);
-		for (i = 0; i < 10; i++)
-		{
-			if (i < pointData[frame].point_count)
-			{
-				fscanf(fpt, ",%d,%d", &pointData[frame].x[i], &pointData[frame].y[i]);
-			}
-			else
-			{
-				fscanf(fpt, ",%*s,%*s");
-			}
-	
-		}
-		fscanf(fpt, "\n");
-		frame++;
-		
-	}
 
+	if (compareReady) {
+		while (frame < TotalData)
+		{
+			fscanf(fpt, "%d,%d,%d", &frame_number, &pointData[frame].point_count, &pointData[frame].manual);
+
+			for (i = 0; i < 10; i++) {
+				if (i < pointData[frame].point_count) {
+					fscanf(fpt, ",%d,%d", &pointData[frame].x[i], &pointData[frame].y[i]);
+				}
+				else {
+					fscanf(fpt, ",%*s,%*s");
+				}
+			}
+			fscanf(fpt, "\n");
+			frame++;
+		}
+	}
+	else {
+		while (frame < TotalData)
+		{
+			fscanf(fpt, "%d,%d,%d", &frame_number, &pointData[frame].point_count, &pointData[frame].manual);
+
+			for (i = 0; i < 10; i++) {
+				if (i < pointData[frame].point_count) {
+					fscanf(fpt, ",%d,%d", &pointData[frame].x[i], &pointData[frame].y[i]);
+				}
+				else {
+					fscanf(fpt, ",%*s,%*s");
+				}
+			}
+			fscanf(fpt, "\n");
+			frame++;
+		}
+	}
 }
 
 void UpdateMode(int mode, int flag) /* new addition 5/26/2023 */
