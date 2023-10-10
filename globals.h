@@ -30,6 +30,11 @@ void		saveDeletedPointsInit();
 void		saveDeletedPoint(int index);
 void		removeDeletedPoint();
 //void		ResizeFrame(Mat* img);
+void		applyMask();
+void		fillROI(bool, int);
+void		mask(Mat, bool, const char*);
+void		drawLine(int, int, int, int);
+
 
 
 #define TIMER_SECOND		1								/* ID of timer used during playback */

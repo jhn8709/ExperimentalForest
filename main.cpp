@@ -204,10 +204,6 @@ switch (uMsg)
 		  UpdateMode(ID_LABELING_DELETEPOINTS, DeleteDot);
 		  break;
 
-	  case ID_COMPARE: // Comparing labels from two different labelers
-		  
-		  break;
-
 	  case ID_QUIT:
 		if (VideoLoaded) {
 		  VideoLoaded=0;
@@ -461,6 +457,11 @@ return(0L);
 		/* moves the TimeIndex according to PlayJump, then calls PaintImage() */
 
 void UpdateDisplay() {
+	
+	if (compareReady) {
+		applyMask();
+	}
+	
 	/* added 8/14/2023 */
 	if ( (pointData[FrameIndex].manual == true) && (interpolateBackward == true) )
 	{
@@ -468,8 +469,8 @@ void UpdateDisplay() {
 		InterpolateFramesBackwards(); // change so this only happens right after a frame is adjused (create a flag), not everytime an adjusted frame is scrolled past.
 	}
 
-/* added 9/7/2023 */
-saveDeletedPointsInit();
+	/* added 9/7/2023 */
+	saveDeletedPointsInit();
 
 	if (FrameIndex+PlayJump < 0  ||  FrameIndex+PlayJump >= TotalData) {
 	  if (FrameIndex+PlayJump < 0)
@@ -487,7 +488,7 @@ saveDeletedPointsInit();
 	  //undo.actions_made = 0;
 	  }
 
-PaintImage();
+	PaintImage();
 }
 
 

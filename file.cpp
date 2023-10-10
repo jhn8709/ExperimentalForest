@@ -27,6 +27,8 @@ VideoCapture	capture;
 int				TotalData;					/* total frames from the video file */
 int				nFrames{150};
 
+vector<int>		Xlist, Ylist, Xpoints, Ypoints;
+
 //Mat img;
 
 void ResizeFrame(Mat* img);
@@ -435,5 +437,59 @@ void ResizeFrame(Mat *img)
 	if ((int)(capture.get(CAP_PROP_FRAME_HEIGHT) > 720))
 	{
 		resize(*img, *img, Size(1280, 720), INTER_LINEAR);
+	}
+}
+
+void applyMask() {
+	capture.set(CAP_PROP_FRAME_COUNT, FrameIndex);
+	
+	Mat frame;
+	int counter = 0;
+	int fast_forward = 1;
+	FrameIndex = -1;
+	capture.read(frame);
+	ResizeFrame(&frame);
+	char color1[6]{ "blue" };
+	char color2[6]{ "green" };
+
+	if ((FrameIndex < TotalData - 2) && ((counter % fast_forward) == 0)) {
+		fillROI(TRUE, FrameIndex + 1);
+		fillROI(FALSE, FrameIndex + 1);
+		mask(frame, TRUE, color1);
+		mask(frame, FALSE, color2);
+	}
+}
+
+void fillROI(bool file, int frameIndex) {
+	int max_width = 375;
+	int max_y = 720;
+	int min_y = 230;	// Represents "Horizon"
+	float slope = max_width / (max_y - min_y);
+	int point_count = pointData[FrameIndex].point_count; // Need to make it access pointData_2 depending on which one is being processed.
+	int width;
+
+	vector<int> frame_points;
+	for (int i = 2; i < (2 + point_count * 2); i++) { // I think we need to run this half the times; in that case change the next loop condition as well.
+		frame_points.push_back(pointData[FrameIndex].x[i]);
+		frame_points.push_back(pointData[FrameIndex].y[i]);
+	}
+	
+	for (int i = 0; i < (point_count * 2 - 2); i+2) {  // update the loop condition depending on the above loop condition
+		drawLine(frame_points[i], frame_points[i + 1], frame_points[i + 2], frame_points[i + 3]);
+
+		for (int j = 0; j < Xpoints.size(); j++) {
+			width = max_width - (max_y - Ypoints[j]) * slope;
+			width = floor(width / 2);
+			Xlist.push_back(Xpoints[j]);
+			Ylist.push_back(Ypoints[j]);
+
+			for (int k = 1; k < width; k++) {
+				Xlist.push_back(Xpoints[j] + k);
+				Ylist.push_back(Ypoints[j]);
+				Xlist.push_back(Xpoints[j] - k);
+				Ylist.push_back(Ypoints[j]);
+			}
+
+		}
 	}
 }
