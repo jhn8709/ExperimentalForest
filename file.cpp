@@ -477,6 +477,7 @@ void fillROI(bool file, int frameIndex) {
 	for (int i = 0; i < (point_count * 2 - 2); i+2) {  // update the loop condition depending on the above loop condition
 		drawLine(frame_points[i], frame_points[i + 1], frame_points[i + 2], frame_points[i + 3]);
 
+		// This section determines which pixels are part of the ROI(region of interest) from the labeled points
 		for (int j = 0; j < Xpoints.size(); j++) {
 			width = max_width - (max_y - Ypoints[j]) * slope;
 			width = floor(width / 2);
@@ -491,5 +492,31 @@ void fillROI(bool file, int frameIndex) {
 			}
 
 		}
+	}
+}
+
+void drawLine(int startX, int startY, int endX, int endY) {
+	int dx = endX - startX;
+	int dy = endY - startY;
+
+	int steps, Xinc, Yinc, X, Y; // Xinc & Yinc are they floats?
+
+	if (abs(dx) > abs(dy)) {
+		steps = abs(dx);
+	}
+	else {
+		steps = abs(dy);
+	}
+
+	Xinc = dx / steps;
+	Yinc = dy / steps;
+	X = startX;
+	Y = startY;
+
+	for (int i = 0; i < steps; i++) {
+		Xpoints.push_back(X);
+		Ypoints.push_back(Y);
+		X += Xinc;
+		Y += Yinc;
 	}
 }
