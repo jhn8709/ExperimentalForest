@@ -32,7 +32,7 @@ void		removeDeletedPoint();
 //void		ResizeFrame(Mat* img);
 void		applyMask();
 void		fillROI(bool, int);
-void		mask(Mat, bool, const char*);
+Mat			mask(Mat, bool);
 void		drawLine(int, int, int, int);
 
 
@@ -137,4 +137,5 @@ struct GroundTruth
 
 
 extern GroundTruth *pointData; // Extending global variable pointData defined on display.cpp
+extern GroundTruth* pointData_2;
 
