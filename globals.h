@@ -1,6 +1,7 @@
 #include <opencv2/video.hpp>
 #include <vector>
 #include <iostream>
+#include <opencv2/opencv.hpp>
 
 using namespace std;
 /* function prototypes */
@@ -32,7 +33,7 @@ void		removeDeletedPoint();
 //void		ResizeFrame(Mat* img);
 void		applyMask();
 void		fillROI(bool, int);
-void		mask(Mat, bool, const char*);
+cv::Mat		mask(cv::Mat, bool);
 void		drawLine(int, int, int, int);
 
 
@@ -137,4 +138,5 @@ struct GroundTruth
 
 
 extern GroundTruth *pointData; // Extending global variable pointData defined on display.cpp
+extern GroundTruth* pointData_2;
 
