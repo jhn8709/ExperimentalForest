@@ -21,7 +21,7 @@ GroundTruth* pointData_2;
 //int			*deletedPointsIndexes;
 vector<int>	deletedPointsIndexes;
 int			deletedPointsCount;
-bool		compareReady{FALSE};
+int 		compareReady{0};
 
 void AllocateStruct(int frame_count)
 {
@@ -68,10 +68,13 @@ char				text[320];
 //if (VideoLoaded  &&  disp_image != NULL)
 if (VideoLoaded)
   {
-  // changed from 15 to 30 since our video is 30fps
-  //ReadVideoFrame(TimeIndex*1000/30+VideoSyncOffset,disp_image);	/* *1000/15 converts 15Hz data to milliseconds */
 
-  ReadVideoFrame();
+  if (compareReady == 2) {
+    applyMask();
+  }
+  else {
+	ReadVideoFrame();
+  }
 
   
   BeginPaint(MainWnd,&Painter);
@@ -412,7 +415,7 @@ void LoadCSVData(char *file_name)
 	fscanf(fpt, "%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s");
 	fscanf(fpt, "\n");
 
-	if (compareReady) {
+	if (compareReady == 2) {
 		pointData_2 = new GroundTruth[TotalData];
 		if (pointData == nullptr) {
 			cout << "Failure to allocate!" << "\n";

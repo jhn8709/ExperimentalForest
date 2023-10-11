@@ -146,8 +146,8 @@ switch (uMsg)
 		}
 		else if (filePath.extension() == ".csv")
 		{
+			compareReady += 1;
 			LoadCSVData(DataFilename);
-			compareReady = TRUE;
 		}
 
 		//ReadVideo(DataFilename);
@@ -458,9 +458,9 @@ return(0L);
 
 void UpdateDisplay() {
 	
-	if (compareReady) {
-		applyMask();
-	}
+	//if (compareReady) {
+	//	applyMask();
+	//}
 	
 	/* added 8/14/2023 */
 	if ( (pointData[FrameIndex].manual == true) && (interpolateBackward == true) )
