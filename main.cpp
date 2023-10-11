@@ -503,8 +503,18 @@ void DataToCSV()
 	FILE* fpt;
 	int i=0 , j;
 
+	/*
+		Generates ground truth file name as video_file_name_GT.csv
+	*/
+	fs::path path;
+	string filename;
 
-	fpt = fopen("GroundTruth.csv", "w+");
+	path = fs::path(DataFilename).filename();
+	filename = path.string();
+	filename = filename.substr(0, filename.size() - 4);
+	filename = filename + "_GT.csv";
+
+	fpt = fopen(filename.c_str(), "w+");
 	if (fpt == NULL) 
 	{
 		// Handle the case when fopen fails
