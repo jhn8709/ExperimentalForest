@@ -28,7 +28,7 @@ int				TotalData;					/* total frames from the video file */
 int				nFrames{150};
 
 vector<int>		Xlist, Ylist, Xlist2, Ylist2, Xpoints, Ypoints;
-
+Mat				masks;						/* masked image*/
 //Mat img;
 
 void ResizeFrame(Mat* img);
@@ -60,11 +60,17 @@ return(1);
 
 int ReadVideoFrame()
 {
-	static Mat img;
-	capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
-	capture.read(img);
-	ResizeFrame(&img);
-	disp_image = img.data;
+	if (compareReady) {
+		disp_image = masks.data;
+	}
+	else {
+		static Mat img;
+		capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
+		capture.read(img);
+		ResizeFrame(&img);
+		disp_image = img.data;
+	}
+	
 	
 	//strcpy((char*)disp_image, (const char*)img.data);
 	//imshow("Frame", img);
@@ -443,7 +449,7 @@ void ResizeFrame(Mat *img)
 void applyMask() {
 	capture.set(CAP_PROP_FRAME_COUNT, FrameIndex);
 	
-	Mat frame, masks;
+	Mat frame;
 	int counter = 0;
 	int fast_forward = 1;
 	FrameIndex = -1;
