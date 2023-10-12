@@ -37,24 +37,23 @@ void ResizeFrame(Mat* img);
 
 int ReadVideo(char* file_name)
 {
-
 	capture.open(file_name);
-
-	TotalData = (int)(capture.get(CAP_PROP_FRAME_COUNT));
 	if (!capture.isOpened()) 
-	{
-		//error in opening the video input
-		cerr << "Unable to open file!" << endl;
-		return 0;
-	}
+		{
+			//error in opening the video input
+			cerr << "Unable to open file!" << endl;
+			return 0;
+		}
+
 	VideoLoaded = TRUE;
+	TotalData = (int)(capture.get(CAP_PROP_FRAME_COUNT));
 	DISPLAY_ROWS = ((int)(capture.get(CAP_PROP_FRAME_HEIGHT)) < 720) ? (int)(capture.get(CAP_PROP_FRAME_HEIGHT)) : 720;
 	DISPLAY_COLS = ((int)(capture.get(CAP_PROP_FRAME_WIDTH)) < 1280) ? (int)(capture.get(CAP_PROP_FRAME_WIDTH)) : 1280;
 	
 	AllocateStruct(TotalData);
 	//disp_image = (unsigned char*)calloc(DISPLAY_ROWS * DISPLAY_COLS * 3, 1);
 
-return(1);
+	return(1);
 }
 
 

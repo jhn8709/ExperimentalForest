@@ -69,54 +69,53 @@ char				text[320];
 if (VideoLoaded)
   {
 
-  if (compareReady == 2) {
-    applyMask();
-  }
-  else {
-	ReadVideoFrame();
-  }
+	  if (compareReady == 2) {
+		applyMask();
+	  }
+	  else {
+		ReadVideoFrame();
+	  }
 
   
-  BeginPaint(MainWnd,&Painter);
-  hDC=GetDC(MainWnd);
-  bm_info_header.biSize=sizeof(BITMAPINFOHEADER); 
-  bm_info_header.biWidth=DISPLAY_COLS;
-  bm_info_header.biHeight=-DISPLAY_ROWS; 
-  bm_info_header.biPlanes=1;
-  bm_info_header.biBitCount=24; 
-  bm_info_header.biCompression=BI_RGB; 
-  bm_info_header.biSizeImage=0; 
-  bm_info_header.biXPelsPerMeter=0; 
-  bm_info_header.biYPelsPerMeter=0;
-  bm_info_header.biClrUsed=0; 
-  bm_info_header.biClrImportant=0;
-  // bm_info.bmiColors=NULL;
-  bm_info.bmiHeader=bm_info_header;
-  SetDIBitsToDevice(hDC,0,0,DISPLAY_COLS,DISPLAY_ROWS,0,0,
-				0, /* first scan line */
-				DISPLAY_ROWS, /* number of scan lines */
-				disp_image,&bm_info,DIB_RGB_COLORS);
+	  BeginPaint(MainWnd,&Painter);
+	  hDC=GetDC(MainWnd);
+	  bm_info_header.biSize=sizeof(BITMAPINFOHEADER); 
+	  bm_info_header.biWidth=DISPLAY_COLS;
+	  bm_info_header.biHeight=-DISPLAY_ROWS; 
+	  bm_info_header.biPlanes=1;
+	  bm_info_header.biBitCount=24; 
+	  bm_info_header.biCompression=BI_RGB; 
+	  bm_info_header.biSizeImage=0; 
+	  bm_info_header.biXPelsPerMeter=0; 
+	  bm_info_header.biYPelsPerMeter=0;
+	  bm_info_header.biClrUsed=0; 
+	  bm_info_header.biClrImportant=0;
+	  // bm_info.bmiColors=NULL;
+	  bm_info.bmiHeader=bm_info_header;
+	  SetDIBitsToDevice(hDC,0,0,DISPLAY_COLS,DISPLAY_ROWS,0,0,
+					0, /* first scan line */
+					DISPLAY_ROWS, /* number of scan lines */
+					disp_image,&bm_info,DIB_RGB_COLORS);
 
-  sprintf(text, "Frame: %d/%d      ", FrameIndex, TotalData); /* new addition 4/16/2023 */
-  TextOut(hDC, DISPLAY_COLS+20, 50, (LPCSTR)text, strlen(text));
-  sprintf(text, "Keyboard Shortcuts:"); /* new addition 4/18/2023 */
-  TextOut(hDC, DISPLAY_COLS + 20, 90, (LPCSTR)text, strlen(text));
-  sprintf(text, "Place Points - \"n\""); /* new addition 4/18/2023 */
-  TextOut(hDC, DISPLAY_COLS + 20, 110, (LPCSTR)text, strlen(text));
-  sprintf(text, "Modify Points - \"m\""); /* new addition 4/18/2023 */
-  TextOut(hDC, DISPLAY_COLS + 20, 130, (LPCSTR)text, strlen(text));
-  sprintf(text, "Delete Points - \"DEL\""); /* new addition 4/18/2023 */
-  TextOut(hDC, DISPLAY_COLS + 20, 150, (LPCSTR)text, strlen(text));
-  sprintf(text, "Interpolate %d Frames Ahead - \"i\"", nFrames); /* new addition 4/18/2023 */
-  TextOut(hDC, DISPLAY_COLS + 20, 170, (LPCSTR)text, strlen(text));
-  sprintf(text, "Save - \"ENTER\""); /* new addition 4/18/2023 */
-  TextOut(hDC, DISPLAY_COLS + 20, 190, (LPCSTR)text, strlen(text));
-  sprintf(text, "Save and Exit - \"CTRL+ENTER\""); /* new addition 4/18/2023 */
-  TextOut(hDC, DISPLAY_COLS + 20, 210, (LPCSTR)text, strlen(text));
+	  sprintf(text, "Frame: %d/%d      ", FrameIndex, TotalData); /* new addition 4/16/2023 */
+	  TextOut(hDC, DISPLAY_COLS+20, 50, (LPCSTR)text, strlen(text));
+	  sprintf(text, "Keyboard Shortcuts:"); /* new addition 4/18/2023 */
+	  TextOut(hDC, DISPLAY_COLS + 20, 90, (LPCSTR)text, strlen(text));
+	  sprintf(text, "Place Points - \"n\""); /* new addition 4/18/2023 */
+	  TextOut(hDC, DISPLAY_COLS + 20, 110, (LPCSTR)text, strlen(text));
+	  sprintf(text, "Modify Points - \"m\""); /* new addition 4/18/2023 */
+	  TextOut(hDC, DISPLAY_COLS + 20, 130, (LPCSTR)text, strlen(text));
+	  sprintf(text, "Delete Points - \"DEL\""); /* new addition 4/18/2023 */
+	  TextOut(hDC, DISPLAY_COLS + 20, 150, (LPCSTR)text, strlen(text));
+	  sprintf(text, "Interpolate %d Frames Ahead - \"i\"", nFrames); /* new addition 4/18/2023 */
+	  TextOut(hDC, DISPLAY_COLS + 20, 170, (LPCSTR)text, strlen(text));
+	  sprintf(text, "Save - \"ENTER\""); /* new addition 4/18/2023 */
+	  TextOut(hDC, DISPLAY_COLS + 20, 190, (LPCSTR)text, strlen(text));
+	  sprintf(text, "Save and Exit - \"CTRL+ENTER\""); /* new addition 4/18/2023 */
+	  TextOut(hDC, DISPLAY_COLS + 20, 210, (LPCSTR)text, strlen(text));
 
-  
-  ReleaseDC(MainWnd,hDC);
-  EndPaint(MainWnd,&Painter);
+	  ReleaseDC(MainWnd,hDC);
+	  EndPaint(MainWnd,&Painter);
   }
 }
 
