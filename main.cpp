@@ -458,35 +458,34 @@ return(0L);
 
 void UpdateDisplay() {
 	
-	//if (compareReady) {
-	//	applyMask();
-	//}
-	
-	/* added 8/14/2023 */
-	if ( (pointData[FrameIndex].manual == true) && (interpolateBackward == true) )
-	{
-		interpolateBackward = false;
-		InterpolateFramesBackwards(); // change so this only happens right after a frame is adjused (create a flag), not everytime an adjusted frame is scrolled past.
+	if (compareReady == 2) {
+		applyMask();
+	}
+	else {
+		if ((pointData[FrameIndex].manual == true) && (interpolateBackward == true))
+		{
+			interpolateBackward = false;
+			InterpolateFramesBackwards(); // change so this only happens right after a frame is adjused (create a flag), not everytime an adjusted frame is scrolled past.
+		}
 	}
 
-	/* added 9/7/2023 */
 	saveDeletedPointsInit();
 
-	if (FrameIndex+PlayJump < 0  ||  FrameIndex+PlayJump >= TotalData) {
-	  if (FrameIndex+PlayJump < 0)
-		FrameIndex=0;
-	  else
-		FrameIndex=TotalData-1;
-	  if (Playing == 1)		  /* halt play if reached either start or end */
+	if (FrameIndex + PlayJump < 0 || FrameIndex + PlayJump >= TotalData) {
+		if (FrameIndex + PlayJump < 0)
+			FrameIndex = 0;
+		else
+			FrameIndex = TotalData - 1;
+		if (Playing == 1)		  /* halt play if reached either start or end */
 		{
-		KillTimer(MainWnd,TIMER_SECOND);
-		Playing=0;
+			KillTimer(MainWnd, TIMER_SECOND);
+			Playing = 0;
 		}
-	  }
+	}
 	else {
-	  FrameIndex+=PlayJump;
-	  //undo.actions_made = 0;
-	  }
+		FrameIndex += PlayJump;
+		//undo.actions_made = 0;
+	}
 
 	PaintImage();
 }

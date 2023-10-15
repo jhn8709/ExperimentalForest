@@ -59,17 +59,28 @@ int ReadVideo(char* file_name)
 
 int ReadVideoFrame()
 {
-	static Mat img;
+	/*static Mat img;
 	capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
 	capture.read(img);
 	ResizeFrame(&img);
-	disp_image = img.data;
+	disp_image = img.data;*/
 	
 	//strcpy((char*)disp_image, (const char*)img.data);
 	//imshow("Frame", img);
 	//waitKey(20);
 
-	return(1);
+	if (compareReady != 2) {
+		static Mat img;
+		capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
+		capture.read(img);
+		ResizeFrame(&img);
+		disp_image = img.data;
+	}
+	else {
+		return(0);
+	}
+
+	return(0);
 
 }
 
@@ -446,7 +457,9 @@ void applyMask() {
 	capture.read(img);
 	ResizeFrame(&img);
 	fillROI(TRUE, FrameIndex);
-	img = createMask(img, Xlist, Ylist, "green");
+	fillROI(FALSE, FrameIndex);
+	img = createMask(img, "green");
+	img = createMask(img, "blue");
 	disp_image = img.data;
 
 	//static Mat frame, masks;
@@ -465,10 +478,10 @@ void fillROI(bool file, int frameIndex) {
 	int max_width = 375;
 	int max_y = 720;
 	int min_y = 230;	// Represents "Horizon"
-	float slope = max_width / (max_y - min_y);
+	float slope = (float)max_width / (max_y - min_y);
 
 	if (file) {
-		int point_count = pointData[FrameIndex].point_count; // Need to make it access pointData_2 depending on which one is being processed ? are we assuming that the other labeler has the same number of points.
+		int point_count = pointData[FrameIndex].point_count; 
 		int width;
 
 		//vector<int> frame_points;
@@ -478,7 +491,7 @@ void fillROI(bool file, int frameIndex) {
 		//}
 		Xlist.clear();
 		Ylist.clear();
-		for (int i = 0; i < (point_count-1); i++) {  // update the loop condition depending on the above loop condition
+		for (int i = 0; i < (point_count-1); i++) {  
 			drawLine(pointData[FrameIndex].x[i], pointData[FrameIndex].y[i], pointData[FrameIndex].x[i + 1], pointData[FrameIndex].y[i + 1]);
 
 			// This section determines which pixels are part of the ROI(region of interest) from the labeled points
@@ -499,7 +512,7 @@ void fillROI(bool file, int frameIndex) {
 		}
 	}
 	else {
-		int point_count = pointData_2[FrameIndex].point_count; // Need to make it access pointData_2 depending on which one is being processed ? are we assuming that the other labeler has the same number of points.
+		int point_count = pointData_2[FrameIndex].point_count; 
 		int width;
 
 
@@ -561,7 +574,7 @@ void drawLine(int startX, int startY, int endX, int endY) {
 	}
 }
 
-cv::Mat createMask(cv::Mat frame, std::vector<int> Xlist, std::vector<int> Ylist, std::string color) {
+cv::Mat createMask(cv::Mat frame, std::string color) {
 	cv::Mat mask(frame.size(), CV_8U, cv::Scalar(0));
 	if (Xlist.size() == 0 || Ylist.size() == 0) {
 		return frame;
@@ -599,46 +612,3 @@ cv::Mat createMask(cv::Mat frame, std::vector<int> Xlist, std::vector<int> Ylist
 
 	return output;
 }
-
-//Mat mask(Mat frame, bool repeat) {
-//	Mat mask = Mat::zeros(frame.rows, frame.cols, CV_64FC1);
-//
-//	vector<vector<int>> roi_corners;
-//	vector<int> temp;
-//
-//	if (repeat) {
-//		for (int i = 0; i < Xlist.size() && i < Ylist.size(); i++) {
-//				temp.push_back(Xlist[i]);
-//				temp.push_back(Ylist[i]);
-//				roi_corners.push_back(temp);
-//			}
-//	}
-//	else {
-//		for (int i = 0; i < Xlist2.size() && i < Ylist2.size(); i++) {
-//			temp.push_back(Xlist2[i]);
-//			temp.push_back(Ylist2[i]);
-//			roi_corners.push_back(temp);
-//		}
-//	}
-//	
-//
-//	fillPoly(mask, roi_corners, (255, 255, 255));
-//
-//	bitwise_and(mask, mask, mask = mask);
-//
-//	Mat overlay = Mat::zeros(frame.rows, frame.cols, CV_64FC1);
-//	cv::Scalar mask_color(0, 0, 175); // (B, G, R)
-//
-//	for (int y = 0; y < mask.rows; ++y) {
-//		for (int x = 0; x < mask.cols; ++x) {
-//			if (mask.at<uchar>(y, x) != 0) {
-//				overlay.at<cv::Vec3b>(y, x) = cv::Vec3b(mask_color[0], mask_color[1], mask_color[2]);
-//			}
-//		}
-//	}
-//
-//	bitwise_and(overlay, overlay, mask = mask);
-//	addWeighted(frame, 1, mask, 0.25, 0.5, mask);
-//	
-//	return mask;
-//}

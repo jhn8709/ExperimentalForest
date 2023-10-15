@@ -33,7 +33,7 @@ void		removeDeletedPoint();
 //void		ResizeFrame(Mat* img);
 void		applyMask();
 void		fillROI(bool, int);
-cv::Mat createMask(cv::Mat frame, std::vector<int> Xlist, std::vector<int> Ylist, std::string color = "green");
+cv::Mat		createMask(cv::Mat frame, std::string color = "green");
 void		drawLine(int, int, int, int);
 
 
