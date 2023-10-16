@@ -29,12 +29,6 @@ int				nFrames{150};
 
 vector<int>		Xlist, Ylist, Xlist2, Ylist2, Xpoints, Ypoints;
 
-//Mat img;
-
-void ResizeFrame(Mat* img);
-
-
-
 int ReadVideo(char* file_name)
 {
 	capture.open(file_name);
@@ -56,19 +50,8 @@ int ReadVideo(char* file_name)
 	return(1);
 }
 
-
 int ReadVideoFrame()
 {
-	/*static Mat img;
-	capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
-	capture.read(img);
-	ResizeFrame(&img);
-	disp_image = img.data;*/
-	
-	//strcpy((char*)disp_image, (const char*)img.data);
-	//imshow("Frame", img);
-	//waitKey(20);
-
 	if (compareReady != 2) {
 		static Mat img;
 		capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
@@ -245,7 +228,6 @@ void InterpolateFrames() /* Repeat set points to a certain amount of frames. Lat
 
 }
 
-/* added 8/14/2023 */
 void InterpolateFramesBackwards()
 {
 	static int nFeatures = 10; /* 10 is the max amount of points allowed to place */
@@ -451,7 +433,6 @@ void ResizeFrame(Mat *img)
 }
 
 void applyMask() {
-
 	static Mat img;
 	capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
 	capture.read(img);
@@ -461,17 +442,6 @@ void applyMask() {
 	img = createMask(img, "green");
 	img = createMask(img, "blue");
 	disp_image = img.data;
-
-	//static Mat frame, masks;
-
-	//capture.set(CAP_PROP_FRAME_COUNT, FrameIndex);
-	//capture.read(frame);
-
-	//fillROI(TRUE, FrameIndex);
-	//fillROI(FALSE, FrameIndex);
-	//frame = createMask(frame, Xlist, Ylist, "green");
-	//masks = createMask(masks, Xlist2, Ylist2, "blue");
-	//disp_image = frame.data;
 }
 
 void fillROI(bool file, int frameIndex) {
@@ -484,15 +454,10 @@ void fillROI(bool file, int frameIndex) {
 		int point_count = pointData[FrameIndex].point_count; 
 		int width;
 
-		//vector<int> frame_points;
-		//for (int i = 0; i < (point_count); i++) { // I think we need to run this half the times; in that case change the next loop condition as well.
-		//	frame_points.push_back(pointData[FrameIndex].x[i]);
-		//	frame_points.push_back(pointData[FrameIndex].y[i]);
-		//}
 		Xlist.clear();
 		Ylist.clear();
 		for (int i = 0; i < (point_count-1); i++) {  
-			drawLine(pointData[FrameIndex].x[i], pointData[FrameIndex].y[i], pointData[FrameIndex].x[i + 1], pointData[FrameIndex].y[i + 1]);
+			drawLineMask(pointData[FrameIndex].x[i], pointData[FrameIndex].y[i], pointData[FrameIndex].x[i + 1], pointData[FrameIndex].y[i + 1]);
 
 			// This section determines which pixels are part of the ROI(region of interest) from the labeled points
 			for (int j = 0; j < Xpoints.size(); j++) {
@@ -515,23 +480,17 @@ void fillROI(bool file, int frameIndex) {
 		int point_count = pointData_2[FrameIndex].point_count; 
 		int width;
 
-
-		//vector<int> frame_points;
-		//for (int i = 0; i < (point_count); i++) { // I think we need to run this half the times; in that case change the next loop condition as well.
-		//	frame_points.push_back(pointData_2[FrameIndex].x[i]);
-		//	frame_points.push_back(pointData_2[FrameIndex].y[i]);
-		//}
 		Xlist2.clear();
 		Ylist2.clear();
-		for (int i = 0; i < (point_count-1); i++) {  // update the loop condition depending on the above loop condition
-			drawLine(pointData_2[FrameIndex].x[i], pointData_2[FrameIndex].y[i], pointData_2[FrameIndex].x[i+1], pointData_2[FrameIndex].y[i+1]);
+		for (int i = 0; i < (point_count-1); i++) {  
+			drawLineMask(pointData_2[FrameIndex].x[i], pointData_2[FrameIndex].y[i], pointData_2[FrameIndex].x[i+1], pointData_2[FrameIndex].y[i+1]);
 
 
 			// This section determines which pixels are part of the ROI(region of interest) from the labeled points
 			for (int j = 0; j < Xpoints.size(); j++) {
 				width = max_width - (max_y - Ypoints[j]) * slope;
 				width = floor(width / 2);
-				Xlist2.push_back(Xpoints[j]);	// Xpoints and YPoints might not require to be global as they seem to be reused.
+				Xlist2.push_back(Xpoints[j]);	
 				Ylist2.push_back(Ypoints[j]);
 
 				for (int k = 1; k < width; k++) {
@@ -546,7 +505,7 @@ void fillROI(bool file, int frameIndex) {
 	}
 }
 
-void drawLine(int startX, int startY, int endX, int endY) {
+void drawLineMask(int startX, int startY, int endX, int endY) {
 	int dx = endX - startX;
 	int dy = endY - startY;
 	double Xinc, Yinc, X, Y;

@@ -1,5 +1,4 @@
 #define _CRT_SECURE_NO_WARNINGS	  /* disable compiler warnings for standard C functions like strcpy() */
-//#define _NO_CRT_STDIO_INLINE
 
 #include <cstdio>
 #include <stdlib.h>
@@ -7,43 +6,32 @@
 #include <winuser.h>
 #include <math.h>
 #include <filesystem>
-
-namespace fs = std::filesystem;
-
 #include "globals.h"
 #include "resource.h"
 
+namespace fs = std::filesystem;
+
 /* global variables */
-HINSTANCE	  hInst;				/* pointer to program instance (need for dialog boxes) */
-HWND		  MainWnd;				/* main window */
-bool Playing{ FALSE };				/* 0=>no; 1=>yes (video is playing, using timer to repeatedly move TimeIndex) */
-bool PlaceDot{ FALSE };				/* 0=>no; 1=>yes (user can place points in window) */
-bool ModifyDot{ FALSE };				/* 0=>no; 1=>yes (user can move placed points in window) */
-bool DeleteDot{ FALSE };				/* 0=>no; 1=>yes (user can delete placed points in window) */
-bool SelectDot{ FALSE };				/* 0=>no; 1=>yes (program will detect closest point to click) */
-bool changeFFSpeed{ FALSE };
-bool changeInterpolationLength{ FALSE };
-bool saveIndicator{ FALSE };
-bool interpolateBackward{ FALSE }; /* controls backwards interpolation process */
-bool disableBackInterp{ FALSE };
+HINSTANCE				hInst;									/* pointer to program instance (need for dialog boxes) */
+HWND					MainWnd;								/* main window */
+bool					Playing{ FALSE };						/* 0=>no; 1=>yes (video is playing, using timer to repeatedly move TimeIndex) */
+bool					PlaceDot{ FALSE };						/* 0=>no; 1=>yes (user can place points in window) */
+bool					ModifyDot{ FALSE };						/* 0=>no; 1=>yes (user can move placed points in window) */
+bool					DeleteDot{ FALSE };						/* 0=>no; 1=>yes (user can delete placed points in window) */
+bool					SelectDot{ FALSE };						/* 0=>no; 1=>yes (program will detect closest point to click) */
+bool					changeFFSpeed{ FALSE };
+bool					changeInterpolationLength{ FALSE };
+bool					saveIndicator{ FALSE };
+bool					interpolateBackward{ FALSE };			/* controls backwards interpolation process */
+bool					disableBackInterp{ FALSE };
 
-char		  DataFilename[320];	/* file that contains the accelerometer data (synchronized and collated at 15 Hz) */
-char		  CurrentPath[320];		/* path where files were last read/saved */
-int			  FrameIndex;			/* index of data currently being displayed (units are samples, 1/30 Hz) */
-int			  PlayJump;				/* amount of samples to jump during each timer */
-int			  FFspeed;				/* user-definable amount of frames to skip per iteration during fast forward */
-int			  PlayCountdown;		/* used to play brief video sequences, halting when it counts down to zero */
+char					DataFilename[320];	/* file that contains the accelerometer data (synchronized and collated at 15 Hz) */
+char					CurrentPath[320];	/* path where files were last read/saved */
+int						FrameIndex;			/* index of data currently being displayed (units are samples, 1/30 Hz) */
+int						PlayJump;			/* amount of samples to jump during each timer */
+int						FFspeed;			/* user-definable amount of frames to skip per iteration during fast forward */
+int						PlayCountdown;		/* used to play brief video sequences, halting when it counts down to zero */
 
-//struct UndoData
-//{
-//	int actionType[5];
-//	int x[5];
-//	int y[5];
-//	int actions_made{0};
-//};
-//UndoData undo;
-
-void		DataToCSV();
 
 int APIENTRY WinMain(HINSTANCE hInstance,
 					 HINSTANCE hPrevInstance,
@@ -228,13 +216,6 @@ switch (uMsg)
 		  ModifyDot = FALSE;  // stop the point moving process
 		  pointData[FrameIndex].manual = true;
 		  interpolateBackward = true;
-
-		  //if ( (ymouse >= HORIZON) && (ymouse <= 720) )
-		  //{
-			 // pointData[FrameIndex].human_x[ymouse - HORIZON] = xmouse;
-			 // fill(pointData[FrameIndex].human_x.begin(), pointData[FrameIndex].human_x.end(), -1);
-			 // //storeGTData(pointData[FrameIndex].human_x);
-		  //}
 	  }
 	  // initiate point fixing
 	  else if ((SelectDot == TRUE) || (DeleteDot == TRUE))
@@ -253,8 +234,6 @@ switch (uMsg)
 			  if (dist < local_min)
 			  {
 				  local_min = dist;
-				  //xchange = px[FrameIndex][i];
-				  //ychange = py[FrameIndex][i];
 				  xchange = pointData[FrameIndex].x[i];
 				  ychange = pointData[FrameIndex].y[i];
 				  selected_point = i;
@@ -268,28 +247,19 @@ switch (uMsg)
 		  DrawPoint(xmouse, ymouse, 2);
 		  pointData[FrameIndex].manual = true;
 		  interpolateBackward = true;
-		  //if ((ymouse >= HORIZON) && (ymouse <= 720))
-		  //{
-			 // pointData[FrameIndex].human_x[ymouse - HORIZON] = xmouse;
-		  //}
 
 		  pointData[FrameIndex].point_count += 1;
 		  if (pointData[FrameIndex].point_count > 1)
 		  {
 			  DrawLine(pointData[FrameIndex].x[pointData[FrameIndex].point_count - 2], pointData[FrameIndex].y[pointData[FrameIndex].point_count - 2],
 				  pointData[FrameIndex].x[pointData[FrameIndex].point_count - 1], pointData[FrameIndex].y[pointData[FrameIndex].point_count - 1], 1);
-			  //storeGTData(pointData[FrameIndex].human_x);
 		  }
 	  }
 	  if (DeleteDot == TRUE)
 	  {
-		  //RecordAction(xchange, ychange, 0);
 		  DeletePoint(xchange, ychange);
 		  pointData[FrameIndex].manual = true;
-		  //fill(pointData[FrameIndex].human_x.begin(), pointData[FrameIndex].human_x.end(), -1);
-		  //storeGTData(pointData[FrameIndex].human_x);
 		  saveDeletedPoint(selected_point);
-		  
 	  }
 	  return(DefWindowProc(hWnd, uMsg, wParam, lParam));
 	  break;
@@ -299,7 +269,6 @@ switch (uMsg)
 	  break;
 
   case WM_MOUSEMOVE:
-
 	  xmouse = LOWORD(lParam);
 	  ymouse = HIWORD(lParam);
 	  // have the contour be visible while moving it
@@ -316,8 +285,7 @@ switch (uMsg)
   case WM_HSCROLL:
 	break;
 
-  case WM_CHAR:
-									/* all these controls set the current PlayJump */
+  case WM_CHAR:		/* all these controls set the current PlayJump */
 	if (((TCHAR)wParam == 'a') || ((TCHAR)wParam == 'A'))
  	  {
 	  PlayJump=((TCHAR)wParam == 'a' ? -FFspeed : -FFspeed*5);
@@ -450,14 +418,11 @@ switch (uMsg)
 	break;
   }
 
-return(0L);
+	return(0L);
 }
 
-
-		/* moves the TimeIndex according to PlayJump, then calls PaintImage() */
-
+/* moves the TimeIndex according to PlayJump, then calls PaintImage() */
 void UpdateDisplay() {
-	
 	if (compareReady == 2) {
 		applyMask();
 	}
@@ -484,12 +449,9 @@ void UpdateDisplay() {
 	}
 	else {
 		FrameIndex += PlayJump;
-		//undo.actions_made = 0;
 	}
-
 	PaintImage();
 }
-
 
 void InitializeDataVariables() {
 	Playing=0;
@@ -541,13 +503,3 @@ void DataToCSV()
 	}
 	fclose(fpt);
 }
-
-/* action=0 means point was deleted, action=1 means point was moved, action=2 means point was placed */
-//void RecordAction(int x_record, int y_record, int action) 
-//{
-//	undo.x[undo.actions_made] = x_record;
-//	undo.y[undo.actions_made] = y_record;
-//	undo.actionType[undo.actions_made] = action;
-//	undo.actions_made++;
-//}
-

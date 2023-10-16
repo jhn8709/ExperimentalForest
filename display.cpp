@@ -1,7 +1,4 @@
-
 #define _CRT_SECURE_NO_WARNINGS	  /* disable compiler warnings for standard C functions like strcpy() */
-
-#define SQR(x)	((x)*(x))
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,17 +11,12 @@
 #include <fstream>
 #include <sstream>
 
-
-//#include <opencv2/video.hpp>
-using namespace std;
-
-int          selected_point;		/* indices of the point closest to where the user has clicked */
-GroundTruth *pointData;  // Groud Truth storing the labels
-GroundTruth* pointData_2;
-//int			*deletedPointsIndexes;
-vector<int>	deletedPointsIndexes;
-int			deletedPointsCount;
-int 		compareReady{0};
+int				selected_point;		// indices of the point closest to where the user has clicked
+GroundTruth*	pointData;			// Groud Truth storing the labels and stored data from FILE 1 for compare
+GroundTruth*	pointData_2;		// Groud Truth read from stored data in FILE 2 for compare
+vector<int>		deletedPointsIndexes;
+int				deletedPointsCount;
+int 			compareReady{0};	// Flag that controls the routine for comparing labels from two different labelers
 
 void AllocateStruct(int frame_count)
 {
@@ -402,6 +394,11 @@ void ModifyPoint(int xmouse, int ymouse, int xchange, int ychange)
 	}
 }
 
+/*
+	@brief Loads data from previous Ground Truth files to GroundTruth structs.
+
+	@param filename: path to the csv file.
+*/
 void LoadCSVData(char* filename) {
 	ifstream file (filename);
 	int frame = 0;
@@ -413,7 +410,7 @@ void LoadCSVData(char* filename) {
 	}
 
 	string line;
-	getline(file, line);
+	getline(file, line); // read and discard the header line
 	while (getline(file, line)) {
 		stringstream iss(line);
 		string token;
@@ -432,7 +429,7 @@ void LoadCSVData(char* filename) {
 			pointData_2[frame].point_count = p_count;
 			for (int i = 0; i < 10; i++) {
 				getline(iss, token, ',');
-				pointData_2[frame].x[i] = (token == "NaN") ? 0 : stoi(token);
+				pointData_2[frame].x[i] = (token == "NaN") ? 0 : stoi(token); // check if the value is NaN and store it as zero
 				getline(iss, token, ',');
 				pointData_2[frame].y[i] = (token == "NaN") ? 0 : stoi(token);
 			}
@@ -518,7 +515,6 @@ void FillGT(int startX, int startY, int endX, int endY, vector<int>& xVector)// 
 	int dx, dy;
 	int steps;
 	double Xinc, Yinc, X, Y;
-	HDC		hDC;
 
 	dx = endX - startX;
 	dy = endY - startY;
@@ -531,7 +527,6 @@ void FillGT(int startX, int startY, int endX, int endY, vector<int>& xVector)// 
 
 	for (int i = 0; i <= steps; i++)
 	{
-
 		if ( (Y > DISPLAY_ROWS) || (Y < HORIZON) )
 		{
 			continue;
