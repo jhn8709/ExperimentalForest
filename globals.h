@@ -33,7 +33,7 @@ void		removeDeletedPoint();
 //void		ResizeFrame(Mat* img);
 void		applyMask();
 void		fillROI(bool, int);
-cv::Mat		mask(cv::Mat, bool);
+cv::Mat		createMask(cv::Mat frame, std::string color = "green");
 void		drawLine(int, int, int, int);
 
 
@@ -71,7 +71,7 @@ extern bool			  changeInterpolationLength;
 extern bool			  saveIndicator;
 extern bool			  InterruptError;
 extern bool			  disableBackInterp;
-extern bool			  compareReady;
+extern int			  compareReady;
 
 
 /* Newer additions 4/2/2023 */

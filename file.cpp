@@ -28,7 +28,7 @@ int				TotalData;					/* total frames from the video file */
 int				nFrames{150};
 
 vector<int>		Xlist, Ylist, Xlist2, Ylist2, Xpoints, Ypoints;
-Mat				masks;						/* masked image*/
+
 //Mat img;
 
 void ResizeFrame(Mat* img);
@@ -37,46 +37,50 @@ void ResizeFrame(Mat* img);
 
 int ReadVideo(char* file_name)
 {
-
 	capture.open(file_name);
-
-	TotalData = (int)(capture.get(CAP_PROP_FRAME_COUNT));
 	if (!capture.isOpened()) 
-	{
-		//error in opening the video input
-		cerr << "Unable to open file!" << endl;
-		return 0;
-	}
+		{
+			//error in opening the video input
+			cerr << "Unable to open file!" << endl;
+			return 0;
+		}
+
 	VideoLoaded = TRUE;
+	TotalData = (int)(capture.get(CAP_PROP_FRAME_COUNT));
 	DISPLAY_ROWS = ((int)(capture.get(CAP_PROP_FRAME_HEIGHT)) < 720) ? (int)(capture.get(CAP_PROP_FRAME_HEIGHT)) : 720;
 	DISPLAY_COLS = ((int)(capture.get(CAP_PROP_FRAME_WIDTH)) < 1280) ? (int)(capture.get(CAP_PROP_FRAME_WIDTH)) : 1280;
 	
 	AllocateStruct(TotalData);
 	//disp_image = (unsigned char*)calloc(DISPLAY_ROWS * DISPLAY_COLS * 3, 1);
 
-return(1);
+	return(1);
 }
 
 
 int ReadVideoFrame()
 {
-	if (compareReady) {
-		disp_image = masks.data;
-	}
-	else {
+	/*static Mat img;
+	capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
+	capture.read(img);
+	ResizeFrame(&img);
+	disp_image = img.data;*/
+	
+	//strcpy((char*)disp_image, (const char*)img.data);
+	//imshow("Frame", img);
+	//waitKey(20);
+
+	if (compareReady != 2) {
 		static Mat img;
 		capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
 		capture.read(img);
 		ResizeFrame(&img);
 		disp_image = img.data;
 	}
-	
-	
-	//strcpy((char*)disp_image, (const char*)img.data);
-	//imshow("Frame", img);
-	//waitKey(20);
+	else {
+		return(0);
+	}
 
-	return(1);
+	return(0);
 
 }
 
@@ -447,41 +451,48 @@ void ResizeFrame(Mat *img)
 }
 
 void applyMask() {
-	capture.set(CAP_PROP_FRAME_COUNT, FrameIndex);
-	
-	Mat frame;
-	int counter = 0;
-	int fast_forward = 1;
-	FrameIndex = -1;
-	capture.read(frame);
-	ResizeFrame(&frame);
 
-	if ((FrameIndex < TotalData - 2) && ((counter % fast_forward) == 0)) {
-		fillROI(TRUE, FrameIndex + 1);
-		fillROI(FALSE, FrameIndex + 1);
-		masks = mask(frame, TRUE);
-		masks = mask(masks, FALSE);
-	}
+	static Mat img;
+	capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
+	capture.read(img);
+	ResizeFrame(&img);
+	fillROI(TRUE, FrameIndex);
+	fillROI(FALSE, FrameIndex);
+	img = createMask(img, "green");
+	img = createMask(img, "blue");
+	disp_image = img.data;
+
+	//static Mat frame, masks;
+
+	//capture.set(CAP_PROP_FRAME_COUNT, FrameIndex);
+	//capture.read(frame);
+
+	//fillROI(TRUE, FrameIndex);
+	//fillROI(FALSE, FrameIndex);
+	//frame = createMask(frame, Xlist, Ylist, "green");
+	//masks = createMask(masks, Xlist2, Ylist2, "blue");
+	//disp_image = frame.data;
 }
 
 void fillROI(bool file, int frameIndex) {
 	int max_width = 375;
 	int max_y = 720;
 	int min_y = 230;	// Represents "Horizon"
-	float slope = max_width / (max_y - min_y);
+	float slope = (float)max_width / (max_y - min_y);
 
 	if (file) {
-		int point_count = pointData[FrameIndex].point_count; // Need to make it access pointData_2 depending on which one is being processed ? are we assuming that the other labeler has the same number of points.
+		int point_count = pointData[FrameIndex].point_count; 
 		int width;
 
-		vector<int> frame_points;
-		for (int i = 2; i < (2 + point_count * 2); i++) { // I think we need to run this half the times; in that case change the next loop condition as well.
-			frame_points.push_back(pointData[FrameIndex].x[i]);
-			frame_points.push_back(pointData[FrameIndex].y[i]);
-		}
-
-		for (int i = 0; i < (point_count * 2 - 2); i + 2) {  // update the loop condition depending on the above loop condition
-			drawLine(frame_points[i], frame_points[i + 1], frame_points[i + 2], frame_points[i + 3]);
+		//vector<int> frame_points;
+		//for (int i = 0; i < (point_count); i++) { // I think we need to run this half the times; in that case change the next loop condition as well.
+		//	frame_points.push_back(pointData[FrameIndex].x[i]);
+		//	frame_points.push_back(pointData[FrameIndex].y[i]);
+		//}
+		Xlist.clear();
+		Ylist.clear();
+		for (int i = 0; i < (point_count-1); i++) {  
+			drawLine(pointData[FrameIndex].x[i], pointData[FrameIndex].y[i], pointData[FrameIndex].x[i + 1], pointData[FrameIndex].y[i + 1]);
 
 			// This section determines which pixels are part of the ROI(region of interest) from the labeled points
 			for (int j = 0; j < Xpoints.size(); j++) {
@@ -501,17 +512,20 @@ void fillROI(bool file, int frameIndex) {
 		}
 	}
 	else {
-		int point_count = pointData_2[FrameIndex].point_count; // Need to make it access pointData_2 depending on which one is being processed ? are we assuming that the other labeler has the same number of points.
+		int point_count = pointData_2[FrameIndex].point_count; 
 		int width;
 
-		vector<int> frame_points;
-		for (int i = 2; i < (2 + point_count * 2); i++) { // I think we need to run this half the times; in that case change the next loop condition as well.
-			frame_points.push_back(pointData_2[FrameIndex].x[i]);
-			frame_points.push_back(pointData_2[FrameIndex].y[i]);
-		}
 
-		for (int i = 0; i < (point_count * 2 - 2); i + 2) {  // update the loop condition depending on the above loop condition
-			drawLine(frame_points[i], frame_points[i + 1], frame_points[i + 2], frame_points[i + 3]);
+		//vector<int> frame_points;
+		//for (int i = 0; i < (point_count); i++) { // I think we need to run this half the times; in that case change the next loop condition as well.
+		//	frame_points.push_back(pointData_2[FrameIndex].x[i]);
+		//	frame_points.push_back(pointData_2[FrameIndex].y[i]);
+		//}
+		Xlist2.clear();
+		Ylist2.clear();
+		for (int i = 0; i < (point_count-1); i++) {  // update the loop condition depending on the above loop condition
+			drawLine(pointData_2[FrameIndex].x[i], pointData_2[FrameIndex].y[i], pointData_2[FrameIndex].x[i+1], pointData_2[FrameIndex].y[i+1]);
+
 
 			// This section determines which pixels are part of the ROI(region of interest) from the labeled points
 			for (int j = 0; j < Xpoints.size(); j++) {
@@ -535,8 +549,8 @@ void fillROI(bool file, int frameIndex) {
 void drawLine(int startX, int startY, int endX, int endY) {
 	int dx = endX - startX;
 	int dy = endY - startY;
-
-	int steps, Xinc, Yinc, X, Y; // Xinc & Yinc are they floats?
+	double Xinc, Yinc, X, Y;
+	int steps;
 
 	if (abs(dx) > abs(dy)) {
 		steps = abs(dx);
@@ -545,58 +559,56 @@ void drawLine(int startX, int startY, int endX, int endY) {
 		steps = abs(dy);
 	}
 
-	Xinc = dx / steps;
-	Yinc = dy / steps;
+	Xinc = dx / (float)steps;
+	Yinc = dy / (float)steps;
 	X = startX;
 	Y = startY;
 
+	Xpoints.clear();
+	Ypoints.clear();
 	for (int i = 0; i < steps; i++) {
-		Xpoints.push_back(X);	// Might need re-initialization of Xpoints and Ypoints
-		Ypoints.push_back(Y);
+		Xpoints.push_back(round(X));	// Might need re-initialization of Xpoints and Ypoints
+		Ypoints.push_back(round(Y));
 		X += Xinc;
 		Y += Yinc;
 	}
 }
 
-Mat mask(Mat frame, bool repeat) {
-	Mat mask = Mat::zeros(frame.rows, frame.cols, CV_64FC1);
-
-	vector<vector<int>> roi_corners;
-	vector<int> temp;
-
-	if (repeat) {
-		for (int i = 0; i < Xlist.size() && i < Ylist.size(); i++) {
-				temp.push_back(Xlist[i]);
-				temp.push_back(Ylist[i]);
-				roi_corners.push_back(temp);
-			}
+cv::Mat createMask(cv::Mat frame, std::string color) {
+	cv::Mat mask(frame.size(), CV_8U, cv::Scalar(0));
+	if (Xlist.size() == 0 || Ylist.size() == 0) {
+		return frame;
 	}
-	else {
-		for (int i = 0; i < Xlist2.size() && i < Ylist2.size(); i++) {
-			temp.push_back(Xlist2[i]);
-			temp.push_back(Ylist2[i]);
-			roi_corners.push_back(temp);
-		}
+	// Define the coordinates of the region of interest (roi_corners)
+	std::vector<cv::Point> roi_corners;
+	for (size_t i = 0; i < Xlist.size(); ++i) {
+		roi_corners.push_back(cv::Point(Xlist[i], Ylist[i]));
 	}
-	
+	std::vector<std::vector<cv::Point>> roi_polygons = { roi_corners };
+	cv::fillPoly(mask, roi_polygons, cv::Scalar(255));
 
-	fillPoly(mask, roi_corners, (255, 255, 255));
-
-	bitwise_and(mask, mask, mask = mask);
-
-	Mat overlay = Mat::zeros(frame.rows, frame.cols, CV_64FC1);
-	cv::Scalar mask_color(0, 0, 175); // (B, G, R)
-
-	for (int y = 0; y < mask.rows; ++y) {
-		for (int x = 0; x < mask.cols; ++x) {
-			if (mask.at<uchar>(y, x) != 0) {
-				overlay.at<cv::Vec3b>(y, x) = cv::Vec3b(mask_color[0], mask_color[1], mask_color[2]);
-			}
-		}
+	cv::Scalar mask_color;
+	if (color == "green") {
+		mask_color = cv::Scalar(0, 175, 0);
+	}
+	else if (color == "blue") {
+		mask_color = cv::Scalar(175, 0, 0);
+	}
+	else if (color == "red") {
+		mask_color = cv::Scalar(0, 0, 175);
 	}
 
-	bitwise_and(overlay, overlay, mask = mask);
-	addWeighted(frame, 1, mask, 0.25, 0.5, mask);
-	
-	return mask;
+	cv::Mat darkened_mask;
+	cv::bitwise_and(mask, mask, darkened_mask, mask = mask);
+
+	cv::Mat overlay(frame.size(), frame.type(), cv::Scalar(0));
+	frame.copyTo(overlay, darkened_mask);
+
+	cv::Mat masked_overlay;
+	cv::bitwise_and(overlay, overlay, masked_overlay, mask = mask);
+
+	cv::Mat output;
+	cv::addWeighted(frame, 1.0, masked_overlay, 0.25, 0.5, output);
+
+	return output;
 }

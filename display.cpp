@@ -8,9 +8,12 @@
 #include <math.h>
 #include <windows.h>
 #include <winuser.h>
-
 #include "globals.h"
 #include "resource.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
 
 //#include <opencv2/video.hpp>
 using namespace std;
@@ -21,12 +24,12 @@ GroundTruth* pointData_2;
 //int			*deletedPointsIndexes;
 vector<int>	deletedPointsIndexes;
 int			deletedPointsCount;
-bool		compareReady{FALSE};
+int 		compareReady{0};
 
 void AllocateStruct(int frame_count)
 {
 	//pointData = (GroundTruth*)calloc(frame_count, sizeof(GroundTruth));
-	pointData = new GroundTruth[frame_count];
+	pointData = new GroundTruth[frame_count]();
 	if (pointData == nullptr) {
 		cout << "Failure to allocate!" << "\n";
 	}
@@ -68,55 +71,56 @@ char				text[320];
 //if (VideoLoaded  &&  disp_image != NULL)
 if (VideoLoaded)
   {
-  // changed from 15 to 30 since our video is 30fps
-  //ReadVideoFrame(TimeIndex*1000/30+VideoSyncOffset,disp_image);	/* *1000/15 converts 15Hz data to milliseconds */
 
-  ReadVideoFrame();
-
+	  /*if (compareReady == 2) {
+		applyMask();
+	  }
+	  else {
+		ReadVideoFrame();
+	  }*/
+	ReadVideoFrame();
   
-  BeginPaint(MainWnd,&Painter);
-  hDC=GetDC(MainWnd);
-  bm_info_header.biSize=sizeof(BITMAPINFOHEADER); 
-  bm_info_header.biWidth=DISPLAY_COLS;
-  bm_info_header.biHeight=-DISPLAY_ROWS; 
-  bm_info_header.biPlanes=1;
-  bm_info_header.biBitCount=24; 
-  bm_info_header.biCompression=BI_RGB; 
-  bm_info_header.biSizeImage=0; 
-  bm_info_header.biXPelsPerMeter=0; 
-  bm_info_header.biYPelsPerMeter=0;
-  bm_info_header.biClrUsed=0; 
-  bm_info_header.biClrImportant=0;
-  // bm_info.bmiColors=NULL;
-  bm_info.bmiHeader=bm_info_header;
-  SetDIBitsToDevice(hDC,0,0,DISPLAY_COLS,DISPLAY_ROWS,0,0,
+	BeginPaint(MainWnd,&Painter);
+	hDC=GetDC(MainWnd);
+	bm_info_header.biSize=sizeof(BITMAPINFOHEADER); 
+	bm_info_header.biWidth=DISPLAY_COLS;
+	bm_info_header.biHeight=-DISPLAY_ROWS; 
+	bm_info_header.biPlanes=1;
+	bm_info_header.biBitCount=24; 
+	bm_info_header.biCompression=BI_RGB; 
+	bm_info_header.biSizeImage=0; 
+	bm_info_header.biXPelsPerMeter=0; 
+	bm_info_header.biYPelsPerMeter=0;
+	bm_info_header.biClrUsed=0; 
+	bm_info_header.biClrImportant=0;
+	// bm_info.bmiColors=NULL;
+	bm_info.bmiHeader=bm_info_header;
+	SetDIBitsToDevice(hDC,0,0,DISPLAY_COLS,DISPLAY_ROWS,0,0,
 				0, /* first scan line */
 				DISPLAY_ROWS, /* number of scan lines */
 				disp_image,&bm_info,DIB_RGB_COLORS);
 
-  sprintf(text, "Frame: %d/%d      ", FrameIndex, TotalData); /* new addition 4/16/2023 */
-  TextOut(hDC, DISPLAY_COLS+20, 50, (LPCSTR)text, strlen(text));
-  sprintf(text, "Keyboard Shortcuts:"); /* new addition 4/18/2023 */
-  TextOut(hDC, DISPLAY_COLS + 20, 90, (LPCSTR)text, strlen(text));
-  sprintf(text, "Place Points - \"n\""); /* new addition 4/18/2023 */
-  TextOut(hDC, DISPLAY_COLS + 20, 110, (LPCSTR)text, strlen(text));
-  sprintf(text, "Modify Points - \"m\""); /* new addition 4/18/2023 */
-  TextOut(hDC, DISPLAY_COLS + 20, 130, (LPCSTR)text, strlen(text));
-  sprintf(text, "Delete Points - \"DEL\""); /* new addition 4/18/2023 */
-  TextOut(hDC, DISPLAY_COLS + 20, 150, (LPCSTR)text, strlen(text));
-  sprintf(text, "Interpolate %d Frames Ahead - \"i\"", nFrames); /* new addition 4/18/2023 */
-  TextOut(hDC, DISPLAY_COLS + 20, 170, (LPCSTR)text, strlen(text));
-  sprintf(text, "Save - \"ENTER\""); /* new addition 4/18/2023 */
-  TextOut(hDC, DISPLAY_COLS + 20, 190, (LPCSTR)text, strlen(text));
-  sprintf(text, "Save and Exit - \"CTRL+ENTER\""); /* new addition 4/18/2023 */
-  TextOut(hDC, DISPLAY_COLS + 20, 210, (LPCSTR)text, strlen(text));
+	sprintf(text, "Frame: %d/%d      ", FrameIndex, TotalData); /* new addition 4/16/2023 */
+	TextOut(hDC, DISPLAY_COLS+20, 50, (LPCSTR)text, strlen(text));
+	sprintf(text, "Keyboard Shortcuts:"); /* new addition 4/18/2023 */
+	TextOut(hDC, DISPLAY_COLS + 20, 90, (LPCSTR)text, strlen(text));
+	sprintf(text, "Place Points - \"n\""); /* new addition 4/18/2023 */
+	TextOut(hDC, DISPLAY_COLS + 20, 110, (LPCSTR)text, strlen(text));
+	sprintf(text, "Modify Points - \"m\""); /* new addition 4/18/2023 */
+	TextOut(hDC, DISPLAY_COLS + 20, 130, (LPCSTR)text, strlen(text));
+	sprintf(text, "Delete Points - \"DEL\""); /* new addition 4/18/2023 */
+	TextOut(hDC, DISPLAY_COLS + 20, 150, (LPCSTR)text, strlen(text));
+	sprintf(text, "Interpolate %d Frames Ahead - \"i\"", nFrames); /* new addition 4/18/2023 */
+	TextOut(hDC, DISPLAY_COLS + 20, 170, (LPCSTR)text, strlen(text));
+	sprintf(text, "Save - \"ENTER\""); /* new addition 4/18/2023 */
+	TextOut(hDC, DISPLAY_COLS + 20, 190, (LPCSTR)text, strlen(text));
+	sprintf(text, "Save and Exit - \"CTRL+ENTER\""); /* new addition 4/18/2023 */
+	TextOut(hDC, DISPLAY_COLS + 20, 210, (LPCSTR)text, strlen(text));
 
-  
-  ReleaseDC(MainWnd,hDC);
-  EndPaint(MainWnd,&Painter);
+	ReleaseDC(MainWnd,hDC);
+	EndPaint(MainWnd,&Painter);
   }
 }
-
 
 LRESULT CALLBACK ChangeFFSpeed(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
@@ -292,25 +296,26 @@ void DrawLine(int startX, int startY, int endX, int endY, int mode) // draw = 0 
 	ReleaseDC(MainWnd, hDC);
 }
 
-
-
 void LoadNextFrame()
 {
-	int X, Y;
+	if (compareReady != 2) {
+		int X, Y;
 
 
-	/* Display points and lines that are already recorded for this frame without recording anything new. */
-	for (int i = 0; i < pointData[FrameIndex].point_count; i++)
-	{
-		X = pointData[FrameIndex].x[i];
-		Y = pointData[FrameIndex].y[i];
-		DrawPoint(X, Y, 1);
-		if ((pointData[FrameIndex].point_count > 0) && (i > 0))
-		{
-			DrawLine(pointData[FrameIndex].x[i - 1], pointData[FrameIndex].y[i - 1],
-				X, Y, 1);
-		}
+			/* Display points and lines that are already recorded for this frame without recording anything new. */
+			for (int i = 0; i < pointData[FrameIndex].point_count; i++)
+			{
+				X = pointData[FrameIndex].x[i];
+				Y = pointData[FrameIndex].y[i];
+				DrawPoint(X, Y, 1);
+				if ((pointData[FrameIndex].point_count > 0) && (i > 0))
+				{
+					DrawLine(pointData[FrameIndex].x[i - 1], pointData[FrameIndex].y[i - 1],
+						X, Y, 1);
+				}
+			}
 	}
+	
 }
 
 void DeletePoint(int x_change, int y_change)
@@ -397,58 +402,51 @@ void ModifyPoint(int xmouse, int ymouse, int xchange, int ychange)
 	}
 }
 
-void LoadCSVData(char *file_name)
-{
-	FILE *fpt;
-	int i, frame_number, frame=0;
+void LoadCSVData(char* filename) {
+	ifstream file (filename);
+	int frame = 0;
+	int p_count;
 
-
-	// code to detect size of data set
-	if ((fpt = fopen(file_name, "r")) == NULL)
-	{
-		exit(0);
+	if (!file) {
+		std::cerr << "Failed to opent the file \n";
+		return;
 	}
 
-	fscanf(fpt, "%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s");
-	fscanf(fpt, "\n");
+	string line;
+	getline(file, line);
+	while (getline(file, line)) {
+		stringstream iss(line);
+		string token;
+		
+		std::getline(iss, token, ',');
+		std::getline(iss, token, ',');
+		p_count = stoi(token);
 
-	if (compareReady) {
-		pointData_2 = new GroundTruth[TotalData];
-		if (pointData == nullptr) {
-			cout << "Failure to allocate!" << "\n";
-		}
-		while (frame < TotalData)
+		if (compareReady == 2)
 		{
-			fscanf(fpt, "%d,%d,%d", &frame_number, &pointData_2[frame].point_count, &pointData_2[frame].manual);
-
-			for (i = 0; i < 10; i++) {
-				if (i < pointData_2[frame].point_count) {
-					fscanf(fpt, ",%d,%d", &pointData_2[frame].x[i], &pointData_2[frame].y[i]);
-				}
-				else {
-					fscanf(fpt, ",%*s,%*s");
-				}
+			pointData_2 = new GroundTruth[TotalData]();
+			if (pointData_2 == nullptr) {
+				cout << "Failure to allocate!" << "\n";
 			}
-			fscanf(fpt, "\n");
-			frame++;
-		}
-	}
-	else {
-		while (frame < TotalData)
-		{
-			fscanf(fpt, "%d,%d,%d", &frame_number, &pointData[frame].point_count, &pointData[frame].manual);
 
-			for (i = 0; i < 10; i++) {
-				if (i < pointData[frame].point_count) {
-					fscanf(fpt, ",%d,%d", &pointData[frame].x[i], &pointData[frame].y[i]);
-				}
-				else {
-					fscanf(fpt, ",%*s,%*s");
-				}
+			pointData_2[frame].point_count = p_count;
+			for (int i = 0; i < 10; i++) {
+				getline(iss, token, ',');
+				pointData_2[frame].x[i] = (token == "NaN") ? 0 : stoi(token);
+				getline(iss, token, ',');
+				pointData_2[frame].y[i] = (token == "NaN") ? 0 : stoi(token);
 			}
-			fscanf(fpt, "\n");
-			frame++;
 		}
+		else {
+			pointData[frame].point_count = p_count;
+			for (int i = 0; i < 10; i++) {
+				getline(iss, token, ',');
+				pointData[frame].x[i] = (token == "NaN") ? 0 : stoi(token);
+				getline(iss, token, ',');
+				pointData[frame].y[i] = (token == "NaN") ? 0 : stoi(token);
+			}
+		}
+		frame++;
 	}
 }
 
