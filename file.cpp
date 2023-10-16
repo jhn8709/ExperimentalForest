@@ -7,14 +7,15 @@
 #include <math.h>
 #include "globals.h"
 #include <string.h>
+#include <iostream>
 
 /* OpenCV includes */
-#include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/video.hpp>
+
 using namespace cv;
 using namespace std;
 
@@ -26,7 +27,6 @@ int				DISPLAY_COLS{ 0 };			/* size of video image */
 VideoCapture	capture;
 int				TotalData;					/* total frames from the video file */
 int				nFrames{150};
-
 vector<int>		Xlist, Ylist, Xlist2, Ylist2, Xpoints, Ypoints;
 
 int ReadVideo(char* file_name)
@@ -440,7 +440,7 @@ void applyMask() {
 	fillROI(TRUE, FrameIndex);
 	fillROI(FALSE, FrameIndex);
 	img = createMask(img, "green");
-	img = createMask(img, "blue");
+	img = createMask(img, "red");
 	disp_image = img.data;
 }
 
@@ -548,13 +548,13 @@ cv::Mat createMask(cv::Mat frame, std::string color) {
 
 	cv::Scalar mask_color;
 	if (color == "green") {
-		mask_color = cv::Scalar(0, 175, 0);
+		mask_color = cv::Scalar(0, 255, 0);
 	}
 	else if (color == "blue") {
-		mask_color = cv::Scalar(175, 0, 0);
+		mask_color = cv::Scalar(255, 0, 0);
 	}
 	else if (color == "red") {
-		mask_color = cv::Scalar(0, 0, 175);
+		mask_color = cv::Scalar(0, 0, 255);
 	}
 
 	cv::Mat darkened_mask;
@@ -562,7 +562,12 @@ cv::Mat createMask(cv::Mat frame, std::string color) {
 
 	cv::Mat overlay(frame.size(), frame.type(), cv::Scalar(0));
 	frame.copyTo(overlay, darkened_mask);
+	
+	cv::Mat color_mask; // mask where darkened_mask is not zero
+	cv::compare(darkened_mask, 0, color_mask, cv::CMP_NE);
 
+	overlay.setTo(mask_color, color_mask); // apply the color to the overlay
+	
 	cv::Mat masked_overlay;
 	cv::bitwise_and(overlay, overlay, masked_overlay, mask = mask);
 
