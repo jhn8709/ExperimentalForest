@@ -121,7 +121,7 @@ switch (uMsg)
 	  case ID_FILE_LOAD:
 		memset(&(ofn),0,sizeof(ofn));
 		ofn.lStructSize=sizeof(ofn);
-		ofn.lpstrFile=(LPSTR)DataFilename;
+		ofn.lpstrFile=DataFilename;
 		DataFilename[0]=0;
 		ofn.nMaxFile=320;
 		ofn.Flags=OFN_EXPLORER | OFN_HIDEREADONLY;

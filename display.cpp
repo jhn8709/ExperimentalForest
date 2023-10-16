@@ -8,9 +8,12 @@
 #include <math.h>
 #include <windows.h>
 #include <winuser.h>
-
 #include "globals.h"
 #include "resource.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
 
 //#include <opencv2/video.hpp>
 using namespace std;
@@ -26,7 +29,7 @@ int 		compareReady{0};
 void AllocateStruct(int frame_count)
 {
 	//pointData = (GroundTruth*)calloc(frame_count, sizeof(GroundTruth));
-	pointData = new GroundTruth[frame_count];
+	pointData = new GroundTruth[frame_count]();
 	if (pointData == nullptr) {
 		cout << "Failure to allocate!" << "\n";
 	}
@@ -399,61 +402,51 @@ void ModifyPoint(int xmouse, int ymouse, int xchange, int ychange)
 	}
 }
 
-/* Load data from groudtruth CSV files.
-*/
-void LoadCSVData(char *file_name)
-{
-	FILE *fpt;
-	int i, frame_number, frame=0;
+void LoadCSVData(char* filename) {
+	ifstream file (filename);
+	int frame = 0;
+	int p_count;
 
-
-
-	// code to detect size of data set
-	if ((fpt = fopen(file_name, "r")) == NULL)
-	{
-		exit(0);
+	if (!file) {
+		std::cerr << "Failed to opent the file \n";
+		return;
 	}
 
-	fscanf(fpt, "%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s");
-	fscanf(fpt, "\n");
+	string line;
+	getline(file, line);
+	while (getline(file, line)) {
+		stringstream iss(line);
+		string token;
+		
+		std::getline(iss, token, ',');
+		std::getline(iss, token, ',');
+		p_count = stoi(token);
 
-	if (compareReady == 2) {
-		pointData_2 = new GroundTruth[TotalData]();
-		if (pointData_2 == nullptr) {
-			cout << "Failure to allocate!" << "\n";
-		}
-		while (frame < TotalData)
+		if (compareReady == 2)
 		{
-			fscanf(fpt, "%d,%d,%d", &frame_number, &pointData_2[frame].point_count, &pointData_2[frame].manual);
-
-			for (i = 0; i < 10; i++) {
-				if (i < pointData_2[frame].point_count) {
-					fscanf(fpt, ",%d,%d", &pointData_2[frame].x[i], &pointData_2[frame].y[i]);
-				}
-				else {
-					fscanf(fpt, ",%*s,%*s");
-				}
+			pointData_2 = new GroundTruth[TotalData]();
+			if (pointData_2 == nullptr) {
+				cout << "Failure to allocate!" << "\n";
 			}
-			fscanf(fpt, "\n");
-			frame++;
-		}
-	}
-	else {
-		while (frame < TotalData)
-		{
-			fscanf(fpt, "%d,%d,%d", &frame_number, &pointData[frame].point_count, &pointData[frame].manual);
 
-			for (i = 0; i < 10; i++) {
-				if (i < pointData[frame].point_count) {
-					fscanf(fpt, ",%d,%d", &pointData[frame].x[i], &pointData[frame].y[i]);
-				}
-				else {
-					fscanf(fpt, ",%*s,%*s");
-				}
+			pointData_2[frame].point_count = p_count;
+			for (int i = 0; i < 10; i++) {
+				getline(iss, token, ',');
+				pointData_2[frame].x[i] = (token == "NaN") ? 0 : stoi(token);
+				getline(iss, token, ',');
+				pointData_2[frame].y[i] = (token == "NaN") ? 0 : stoi(token);
 			}
-			fscanf(fpt, "\n");
-			frame++;
 		}
+		else {
+			pointData[frame].point_count = p_count;
+			for (int i = 0; i < 10; i++) {
+				getline(iss, token, ',');
+				pointData[frame].x[i] = (token == "NaN") ? 0 : stoi(token);
+				getline(iss, token, ',');
+				pointData[frame].y[i] = (token == "NaN") ? 0 : stoi(token);
+			}
+		}
+		frame++;
 	}
 }
 
