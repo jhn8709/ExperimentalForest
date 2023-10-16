@@ -39,6 +39,7 @@ void		drawLineMask(int, int, int, int);
 /* global variables */
 //HINSTANCE	  hInst;				/* pointer to program instance (need for dialog boxes) */
 extern HWND			  MainWnd;				/* main window */
+extern HWND			  hSidePanel;
 extern char		      DataFilename[320];	/* file name of the user selected file */
 extern char		      CurrentPath[320];		/* path where files were last read/saved */
 extern int			  VideoSyncOffset;		/* milliseconds between data[0] and first video frame */

@@ -14,6 +14,7 @@ namespace fs = std::filesystem;
 /* global variables */
 HINSTANCE				hInst;									/* pointer to program instance (need for dialog boxes) */
 HWND					MainWnd;								/* main window */
+HWND					hSidePanel;
 bool					Playing{ FALSE };						/* 0=>no; 1=>yes (video is playing, using timer to repeatedly move TimeIndex) */
 bool					PlaceDot{ FALSE };						/* 0=>no; 1=>yes (user can place points in window) */
 bool					ModifyDot{ FALSE };						/* 0=>no; 1=>yes (user can move placed points in window) */
@@ -65,6 +66,23 @@ MainWnd=CreateWindow((LPCSTR)"STEPVIEW",(LPCSTR)"Forest Labeler",
 			0,0,600+650,800,NULL,NULL,hInstance,NULL);
 if (!MainWnd)
   return(FALSE);
+
+// Side Panel
+RECT mainClientRect;
+GetClientRect(MainWnd, &mainClientRect);
+int sidePanelWidth = 200;  // Width of the side panel
+int sidePanelX = mainClientRect.right - sidePanelWidth;  // Position it to the right
+
+hSidePanel = CreateWindow(
+	(LPCSTR)"STATIC",                  // Class name for a static control
+	(LPCSTR)"Side Panel",              // Text to display on the panel
+	WS_CHILD | WS_VISIBLE | WS_BORDER | SS_LEFT, // Style
+	sidePanelX, 50, sidePanelWidth, mainClientRect.bottom, // Position and size
+	MainWnd,                   // Parent window
+	(HMENU)IDC_SIDEPANEL,       // Control ID
+	hInst,                  // Application instance
+	NULL                        // Additional parameters
+);
 
 ShowScrollBar(MainWnd,SB_BOTH,FALSE);
 ShowWindow(MainWnd,SW_MAXIMIZE);
