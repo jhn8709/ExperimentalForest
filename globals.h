@@ -12,7 +12,7 @@ void		UpdateDisplay();
 int		    ReadVideo(char* file_name);
 void        AllocateStruct(int frame_count);
 void		ModifyPoint(int xmouse, int ymouse, int xchange, int ychange);
-int			ReadVideoFrame();
+void		ReadVideoFrame();
 void		InitializeDataVariables();
 LRESULT		CALLBACK ChangeFFSpeed(HWND, UINT, WPARAM, LPARAM); /* change FF speed */
 void		DrawPoint(int xval, int yval, int mode);
@@ -33,7 +33,7 @@ void		removeDeletedPoint();
 void		ResizeFrame(cv::Mat* img);
 void		applyMask();
 void		fillROI(bool, int);
-cv::Mat		createMask(cv::Mat frame, std::string color = "green");
+cv::Mat		createMask(bool first_second, cv::Mat frame, std::string color = "green");
 void		drawLineMask(int, int, int, int);
 
 /* global variables */

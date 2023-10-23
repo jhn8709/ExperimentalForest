@@ -50,7 +50,10 @@ int ReadVideo(char* file_name)
 	return(1);
 }
 
-int ReadVideoFrame()
+/*
+	@brief Extracts the frame at FrameIndex and stores the image in disp_image.
+*/
+void ReadVideoFrame()
 {
 	if (compareReady != 2) {
 		static Mat img;
@@ -58,13 +61,9 @@ int ReadVideoFrame()
 		capture.read(img);
 		ResizeFrame(&img);
 		disp_image = img.data;
+		return;
 	}
-	else {
-		return(0);
-	}
-
-	return(0);
-
+	return;
 }
 
 void InterpolateFrames() /* Repeat set points to a certain amount of frames. Later this section should have an interpolation algorithm. */
@@ -432,22 +431,30 @@ void ResizeFrame(Mat *img)
 	}
 }
 
+/*
+	@brief Based on the ground truth data forms the trail on the image. disp_image stores the processed data.
+*/
 void applyMask() {
 	static Mat img;
 	capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
 	capture.read(img);
 	ResizeFrame(&img);
+
+	/* Find the width of the trail for every labeled point
+	   Draw Lines through
+	   Apply mask over the area in the image and then apply the mask again wrt the second label
+	*/
 	fillROI(TRUE, FrameIndex);
 	fillROI(FALSE, FrameIndex);
-	img = createMask(img, "green");
-	img = createMask(img, "red");
+	img = createMask(TRUE, img, "green");
+	img = createMask(FALSE, img, "red");
 	disp_image = img.data;
 }
 
 void fillROI(bool file, int frameIndex) {
 	int max_width = 375;
 	int max_y = 720;
-	int min_y = 230;	// Represents "Horizon"
+	int min_y = HORIZON;	// Represents "Horizon"
 	float slope = (float)max_width / (max_y - min_y);
 
 	if (file) {
@@ -526,23 +533,36 @@ void drawLineMask(int startX, int startY, int endX, int endY) {
 	Xpoints.clear();
 	Ypoints.clear();
 	for (int i = 0; i < steps; i++) {
-		Xpoints.push_back(round(X));	// Might need re-initialization of Xpoints and Ypoints
+		Xpoints.push_back(round(X));
 		Ypoints.push_back(round(Y));
 		X += Xinc;
 		Y += Yinc;
 	}
 }
 
-cv::Mat createMask(cv::Mat frame, std::string color) {
+cv::Mat createMask(bool first_second, cv::Mat frame, std::string color) {
 	cv::Mat mask(frame.size(), CV_8U, cv::Scalar(0));
-	if (Xlist.size() == 0 || Ylist.size() == 0) {
-		return frame;
-	}
-	// Define the coordinates of the region of interest (roi_corners)
 	std::vector<cv::Point> roi_corners;
-	for (size_t i = 0; i < Xlist.size(); ++i) {
-		roi_corners.push_back(cv::Point(Xlist[i], Ylist[i]));
+
+	if (first_second) {
+		if (Xlist.size() == 0 || Ylist.size() == 0) {
+			return frame;
+		}
+		// Define the coordinates of the region of interest (roi_corners)
+		for (size_t i = 0; i < Xlist.size(); ++i) {
+			roi_corners.push_back(cv::Point(Xlist[i], Ylist[i]));
+		}
 	}
+	else {
+		if (Xlist2.size() == 0 || Ylist2.size() == 0) {
+			return frame;
+		}
+		// Define the coordinates of the region of interest (roi_corners)
+		for (size_t i = 0; i < Xlist.size(); ++i) {
+			roi_corners.push_back(cv::Point(Xlist2[i], Ylist2[i]));
+		}
+	}
+	
 	std::vector<std::vector<cv::Point>> roi_polygons = { roi_corners };
 	cv::fillPoly(mask, roi_polygons, cv::Scalar(255));
 
