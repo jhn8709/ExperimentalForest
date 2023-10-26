@@ -304,6 +304,25 @@ switch (uMsg)
 	  UpdateDisplay();
 	  LoadNextFrame();
 	  }
+	if (((TCHAR)wParam == 'b') || ((TCHAR)wParam == 'B')) /* copy last frame's points */
+	{
+		//PostMessage(MainWnd, WM_COMMAND, ID_LABELING_MODIFYPOINTS, 0);
+		if (FrameIndex == 0) {
+			break;
+		}
+		if (pointData[FrameIndex - 1].point_count > 0) {
+			pointData[FrameIndex].point_count = pointData[FrameIndex - 1].point_count;
+			for (i = 0; i < pointData[FrameIndex - 1].point_count; i++) {
+				pointData[FrameIndex].x[i] = pointData[FrameIndex - 1].x[i];
+				pointData[FrameIndex].y[i] = pointData[FrameIndex - 1].y[i];
+			}
+		}
+		// TO-DO: Implement deletion of existing points
+		/*	Check if any points are drawn
+			Delete lines and points from screen
+			Probably should perform this before copying the points */
+		LoadNextFrame();
+	}
 	if (((TCHAR)wParam == 'g') || ((TCHAR)wParam == 'G'))
  	  {
 	  PlayJump=((TCHAR)wParam == 'g' ? FFspeed : FFspeed*5);
