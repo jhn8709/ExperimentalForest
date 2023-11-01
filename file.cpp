@@ -20,7 +20,7 @@ using namespace cv;
 using namespace std;
 
 bool			VideoLoaded{ FALSE };		/* 0=>no; 1=>yes (file exists and is opened in ffmpeg library) */
-bool			InterruptError{ FALSE };
+//bool			InterruptError{ FALSE };
 unsigned char*	disp_image;					/* image from video to display */
 int				DISPLAY_ROWS{ 0 };			/* size of video image */
 int				DISPLAY_COLS{ 0 };			/* size of video image */
@@ -155,11 +155,11 @@ void InterpolateFrames() /* Repeat set points to a certain amount of frames. Lat
 			}
 			
 		}
-		if (lostP_inc > 0)
+		/*if (lostP_inc > 0)
 		{
 			InterruptError = TRUE;
 			break;
-		}
+		}*/
 
 		// Now update the previous frame and previous points
 		old_gray = frame_gray.clone();
@@ -337,11 +337,11 @@ void InterpolateFramesBackwards()
 			}
 
 		}
-		if (lostP_inc > 0)
+		/*if (lostP_inc > 0)
 		{
 			InterruptError = TRUE;
 			break;
-		}
+		}*/
 
 		// Now update the previous frame and previous points
 		old_gray = frame_gray.clone();

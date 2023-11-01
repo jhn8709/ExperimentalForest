@@ -351,16 +351,17 @@ switch (uMsg)
 	{
 		InterpolateFrames();
 		interpolateBackward = false;
-		InterpolateFramesBackwards(); // added 8/14/2023
-		if (InterruptError == TRUE)
-		{
-			sprintf(text, "Error!\n-------------------------------------------------\n");
-			strcat(text, "More than 2 points have lost tracking.\n");
-			strcat(text, "This occurs when 2 points reach the edge of the screen.\n");
-			strcat(text, "Modify or delete points and then interpolate again.\n");
-			MessageBox(hWnd, (LPCSTR)text, (LPCSTR)"Interpolation Interrupted!", MB_OK | MB_APPLMODAL);
-			InterruptError = FALSE;
-		}
+		InterpolateFramesBackwards();
+		//if (InterruptError == true)	// Disabled because it happens too often and so is annoying and not useful
+		//{
+		//	//HDC hDC;
+		//	//hDC = GetDC(MainWnd);
+		//	////messagebox(hwnd, (lpcstr)text, (lpcstr)"interpolation interrupted!", mb_ok | mb_applmodal);
+		//	//sprintf(text, "More than 2 points have lost tracking.");
+		//	//TextOut(hDC, DISPLAY_COLS + 20, 250, (LPCSTR)text, strlen(text));
+		//	//ReleaseDC(MainWnd, hDC);
+		//	InterruptError = false;
+		//}
 	}
 	if (((TCHAR)wParam == 'p') || ((TCHAR)wParam == 'P'))	  /* play a step -- from 1 seconds before, to 1 second after current time */
 	  {

@@ -63,7 +63,7 @@ extern bool			  VideoLoaded;			/* 0=>no; 1=>yes (file exists and is opened in ff
 extern bool			  changeFFSpeed;
 extern bool			  changeInterpolationLength;
 extern bool			  saveIndicator;
-extern bool			  InterruptError;
+//extern bool			  InterruptError;	  // Disabled because it happens too often and so is annoying and not useful
 extern bool			  disableBackInterp;
 extern int			  compareReady;			// Flag that controls the routine for comparing labels from two different labelers
 
