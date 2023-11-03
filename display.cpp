@@ -108,7 +108,10 @@ if (VideoLoaded)
 	TextOut(hDC, DISPLAY_COLS + 20, 190, (LPCSTR)text, strlen(text));
 	sprintf(text, "Save and Exit - \"CTRL+ENTER\""); /* new addition 4/18/2023 */
 	TextOut(hDC, DISPLAY_COLS + 20, 210, (LPCSTR)text, strlen(text));
-
+	if (imageloaded == TRUE) {
+		sprintf(text, "Image Loading Complete");
+		TextOut(hDC, DISPLAY_COLS + 20, 250, (LPCSTR)text, strlen(text));
+	}
 	ReleaseDC(MainWnd,hDC);
 	EndPaint(MainWnd,&Painter);
   }
@@ -411,6 +414,7 @@ void LoadCSVData(char* filename) {
 
 	string line;
 	getline(file, line); // read and discard the header line
+	auto test = 872;
 	while (getline(file, line)) {
 		stringstream iss(line);
 		string token;
@@ -427,6 +431,8 @@ void LoadCSVData(char* filename) {
 			}
 
 			pointData_2[frame].point_count = p_count;
+			std::getline(iss, token, ',');
+			pointData_2[frame].manual = stoi(token); // This token can be discarded as it is not useful
 			for (int i = 0; i < 10; i++) {
 				getline(iss, token, ',');
 				pointData_2[frame].x[i] = (token == "NaN") ? 0 : stoi(token); // check if the value is NaN and store it as zero
@@ -436,6 +442,8 @@ void LoadCSVData(char* filename) {
 		}
 		else {
 			pointData[frame].point_count = p_count;
+			std::getline(iss, token, ',');
+			pointData[frame].manual = stoi(token); // This token can be discarded as it is not useful
 			for (int i = 0; i < 10; i++) {
 				getline(iss, token, ',');
 				pointData[frame].x[i] = (token == "NaN") ? 0 : stoi(token);
@@ -444,6 +452,10 @@ void LoadCSVData(char* filename) {
 			}
 		}
 		frame++;
+		if (test == frame)
+		{
+			cout<<"Yup";
+		}
 	}
 }
 

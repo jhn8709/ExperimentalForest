@@ -1,4 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS	  /* disable compiler warnings for standard C functions like strcpy() */
+#pragma warning(disable:4244)	  /* disable compiler warnings for possible loss of data */
+#pragma warning(disable:4267)	  /* disable compiler warnings for possible loss of data */
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +31,8 @@ VideoCapture	capture;
 int				TotalData;					/* total frames from the video file */
 int				nFrames{150};
 vector<int>		Xlist, Ylist, Xlist2, Ylist2, Xpoints, Ypoints;
+vector<Mat>		images; // stores all the frames from the video
+bool			imageloaded{ FALSE };
 
 int ReadVideo(char* file_name)
 {
@@ -432,13 +437,57 @@ void ResizeFrame(Mat *img)
 }
 
 /*
+	@brief Load the images from the video file and store them in the images vector.
+*/
+void LoadImageFromVideo() {
+	Mat img;
+	HDC hDC = GetDC(MainWnd);
+	char text[100];
+	for (int i = 0; i < nFrames; i++) {
+		capture.set(CAP_PROP_POS_FRAMES, i);
+		capture.read(img);
+		ResizeFrame(&img);
+		images.push_back(img);
+		sprintf(text, "Loading ... %d/100%%", (int)(i / nFrames * 100));
+		TextOut(hDC, DISPLAY_COLS + 20, 250, (LPCSTR)text, strlen(text));
+	}
+	ReleaseDC(MainWnd, hDC);
+	imageloaded = TRUE;
+}
+
+/*
+	@brief Thread that loads the images from the video file.
+*/
+unsigned int __stdcall ImageLoadingThread(void* data) {
+	LoadImageFromVideo();
+	return 0;
+}
+
+/*
+	@brief Starts the thread that loads the images from the video file.
+*/
+void StartImageLoadingThread() {
+	HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, &ImageLoadingThread, NULL, 0, NULL);
+	HDC hDC = GetDC(MainWnd);
+	char text[100];
+	if (hThread == nullptr) {
+		cout << "Error creating thread" << endl;
+	}
+	else {
+		sprintf(text, "Loading ... 0/100%%");
+		TextOut(hDC, DISPLAY_COLS + 20, 250, (LPCSTR)text, strlen(text));
+	}
+	ReleaseDC(MainWnd, hDC);
+}
+
+/*
 	@brief Based on the ground truth data forms the trail on the image. disp_image stores the processed data.
 */
 void applyMask() {
-	static Mat img;
-	capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
+	static Mat img = images[FrameIndex];
+	/*capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
 	capture.read(img);
-	ResizeFrame(&img);
+	ResizeFrame(&img);*/
 
 	/* Find the width of the trail for every labeled point
 	   Draw Lines through
@@ -446,8 +495,8 @@ void applyMask() {
 	*/
 	fillROI(TRUE, FrameIndex);
 	fillROI(FALSE, FrameIndex);
-	img = createMask(TRUE, img, "green");
-	img = createMask(FALSE, img, "red");
+	createMask(TRUE, img, "green");  // Directly applies the mask to the image
+	createMask(FALSE, img, "red");
 	disp_image = img.data;
 }
 
@@ -540,7 +589,7 @@ void drawLineMask(int startX, int startY, int endX, int endY) {
 	}
 }
 
-cv::Mat createMask(bool first_second, cv::Mat frame, std::string color) {
+cv::Mat createMask(bool first_second, cv::Mat &frame, std::string color) {
 	cv::Mat mask(frame.size(), CV_8U, cv::Scalar(0));
 	std::vector<cv::Point> roi_corners;
 

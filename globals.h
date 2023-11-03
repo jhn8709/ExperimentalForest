@@ -33,8 +33,9 @@ void		removeDeletedPoint();
 void		ResizeFrame(cv::Mat* img);
 void		applyMask();
 void		fillROI(bool, int);
-cv::Mat		createMask(bool first_second, cv::Mat frame, std::string color = "green");
+cv::Mat		createMask(bool first_second, cv::Mat &frame, std::string color = "green");
 void		drawLineMask(int, int, int, int);
+void		LoadImageFromVideo();
 
 /* global variables */
 //HINSTANCE	  hInst;				/* pointer to program instance (need for dialog boxes) */
@@ -66,6 +67,7 @@ extern bool			  saveIndicator;
 //extern bool			  InterruptError;	  // Disabled because it happens too often and so is annoying and not useful
 extern bool			  disableBackInterp;
 extern int			  compareReady;			// Flag that controls the routine for comparing labels from two different labelers
+extern bool			  imageloaded;
 
 constexpr int TIMER_SECOND = 1;				/* ID of timer used during playback */
 constexpr int POINT_SIZE = 7;				// Radius size for labeled points

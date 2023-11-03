@@ -8,6 +8,7 @@
 #include <filesystem>
 #include "globals.h"
 #include "resource.h"
+#include <ShObjIdl.h>
 
 namespace fs = std::filesystem;
 
@@ -91,16 +92,19 @@ LRESULT CALLBACK WndProc (HWND hWnd,
 						  LPARAM lParam)
 
 {
-int				i;
-static int		xmouse, ymouse, xchange, ychange;
-OPENFILENAME	ofn;
-//HMENU			hAppMenu;
-char			text[320];
-/* Newer additions 4/2/2023 */
-double			dist, local_min = 10000;
-fs::path		filePath;
-HDC				hDC;
+	int				i;
+	static int		xmouse, ymouse, xchange, ychange;
+	OPENFILENAME	ofn;
+	//HMENU			hAppMenu;
+	char			text[320];
+	/* Newer additions 4/2/2023 */
+	double			dist, local_min = 10000;
+	fs::path		filePath;
+	HDC				hDC;
 
+
+	HRESULT hr;
+	
 
 switch (uMsg)
   {
@@ -115,12 +119,11 @@ switch (uMsg)
 		ofn.Flags=OFN_EXPLORER | OFN_HIDEREADONLY;
 		// ofn.lpstrFilter="Data files\0P???_*.txt\0All files\0*.*\0\0";
 		ofn.lpstrFilter = (LPCSTR)"All files\0 * .*\0\0";
-		
-		if (!( GetOpenFileName(&ofn))  ||  DataFilename[0] == '\0')
+		if (!GetOpenFileName(&ofn))
 		  break;
 		filePath = DataFilename;
 		
-						// set currentpath to where file loaded from 
+		// set currentpath to where file loaded from 
 		strcpy(CurrentPath,DataFilename);
 		i=strlen(CurrentPath)-1;
 		while (i > 0  &&  CurrentPath[i] != '\\')
@@ -136,6 +139,10 @@ switch (uMsg)
 		{
 			compareReady += 1;
 			LoadCSVData(DataFilename);
+			if (compareReady == 2) {
+				LoadImageFromVideo();  // Load the images from the video file to "images" in a background thread
+			}
+			
 		}
 
 		//ReadVideo(DataFilename);
