@@ -60,14 +60,11 @@ int ReadVideo(char* file_name)
 */
 void ReadVideoFrame()
 {
-	if (compareReady != 2) {
-		static Mat img;
-		capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
-		capture.read(img);
-		ResizeFrame(&img);
-		disp_image = img.data;
-		return;
-	}
+	static Mat img;
+	capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
+	capture.read(img);
+	ResizeFrame(&img);
+	disp_image = img.data;
 	return;
 }
 
@@ -443,12 +440,14 @@ void LoadImageFromVideo() {
 	Mat img;
 	HDC hDC = GetDC(MainWnd);
 	char text[100];
-	for (int i = 0; i < nFrames; i++) {
+	//for (int i = 0; i < TotalData; i++) {  // Only for testing purposes
+	for (int i = 0; i < 100; i++) {
 		capture.set(CAP_PROP_POS_FRAMES, i);
 		capture.read(img);
 		ResizeFrame(&img);
 		images.push_back(img);
-		sprintf(text, "Loading ... %d/100%%", (int)(i / nFrames * 100));
+		//sprintf(text, "Loading ... %0.2f / 100%%", (float)i /TotalData * 100);  // Only for testing purposes
+		sprintf(text, "Loading ... %0.2f / 100%%", (float)i /100 * 100);
 		TextOut(hDC, DISPLAY_COLS + 20, 250, (LPCSTR)text, strlen(text));
 	}
 	ReleaseDC(MainWnd, hDC);
@@ -467,7 +466,7 @@ unsigned int __stdcall ImageLoadingThread(void* data) {
 	@brief Starts the thread that loads the images from the video file.
 */
 void StartImageLoadingThread() {
-	HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, &ImageLoadingThread, NULL, 0, NULL);
+	/*HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, &ImageLoadingThread, NULL, 0, NULL);
 	HDC hDC = GetDC(MainWnd);
 	char text[100];
 	if (hThread == nullptr) {
@@ -477,7 +476,8 @@ void StartImageLoadingThread() {
 		sprintf(text, "Loading ... 0/100%%");
 		TextOut(hDC, DISPLAY_COLS + 20, 250, (LPCSTR)text, strlen(text));
 	}
-	ReleaseDC(MainWnd, hDC);
+	ReleaseDC(MainWnd, hDC);*/
+	LoadImageFromVideo();
 }
 
 /*
@@ -485,6 +485,7 @@ void StartImageLoadingThread() {
 */
 void applyMask() {
 	static Mat img = images[FrameIndex];
+	//cv::imshow("Trail", img);
 	/*capture.set(CAP_PROP_POS_FRAMES, FrameIndex);
 	capture.read(img);
 	ResizeFrame(&img);*/
@@ -495,9 +496,11 @@ void applyMask() {
 	*/
 	fillROI(TRUE, FrameIndex);
 	fillROI(FALSE, FrameIndex);
-	createMask(TRUE, img, "green");  // Directly applies the mask to the image
-	createMask(FALSE, img, "red");
+	img = createMask(TRUE, img, "green");  // Directly applies the mask to the image
+	img = createMask(FALSE, img, "red");
 	disp_image = img.data;
+	//cv::imshow("Trail", img);
+	return;
 }
 
 void fillROI(bool file, int frameIndex) {
@@ -589,7 +592,7 @@ void drawLineMask(int startX, int startY, int endX, int endY) {
 	}
 }
 
-cv::Mat createMask(bool first_second, cv::Mat &frame, std::string color) {
+cv::Mat createMask(bool first_second, cv::Mat frame, std::string color) {
 	cv::Mat mask(frame.size(), CV_8U, cv::Scalar(0));
 	std::vector<cv::Point> roi_corners;
 

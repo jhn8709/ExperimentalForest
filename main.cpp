@@ -101,10 +101,7 @@ LRESULT CALLBACK WndProc (HWND hWnd,
 	double			dist, local_min = 10000;
 	fs::path		filePath;
 	HDC				hDC;
-
-
-	HRESULT hr;
-	
+		
 
 switch (uMsg)
   {
@@ -113,14 +110,15 @@ switch (uMsg)
 	  case ID_FILE_LOAD:
 		memset(&(ofn),0,sizeof(ofn));
 		ofn.lStructSize=sizeof(ofn);
-		ofn.lpstrFile=DataFilename;
+		ofn.lpstrFile=(LPSTR)DataFilename;
 		DataFilename[0]=0;
 		ofn.nMaxFile=320;
 		ofn.Flags=OFN_EXPLORER | OFN_HIDEREADONLY;
 		// ofn.lpstrFilter="Data files\0P???_*.txt\0All files\0*.*\0\0";
 		ofn.lpstrFilter = (LPCSTR)"All files\0 * .*\0\0";
-		if (!GetOpenFileName(&ofn))
-		  break;
+		if (!(GetOpenFileName(&ofn)) || DataFilename[0] == '\0') {
+			break;
+		}
 		filePath = DataFilename;
 		
 		// set currentpath to where file loaded from 
@@ -459,9 +457,8 @@ void UpdateDisplay() {
 			interpolateBackward = false;
 			InterpolateFramesBackwards(); // change so this only happens right after a frame is adjused (create a flag), not everytime an adjusted frame is scrolled past.
 		}
+		saveDeletedPointsInit();
 	}
-
-	saveDeletedPointsInit();
 
 	if (FrameIndex + PlayJump < 0 || FrameIndex + PlayJump >= TotalData) {
 		if (FrameIndex + PlayJump < 0)

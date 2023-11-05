@@ -33,7 +33,7 @@ void		removeDeletedPoint();
 void		ResizeFrame(cv::Mat* img);
 void		applyMask();
 void		fillROI(bool, int);
-cv::Mat		createMask(bool first_second, cv::Mat &frame, std::string color = "green");
+cv::Mat		createMask(bool first_second, cv::Mat frame, std::string color = "green");
 void		drawLineMask(int, int, int, int);
 void		LoadImageFromVideo();
 
@@ -58,7 +58,7 @@ extern int			  nFrames;
 extern vector<int>    deletedPointsIndexes;
 extern int			  deletedPointsCount;
 extern int			  selected_point;		/* indices of the point closest to where the user has clicked */			  
-
+extern vector<cv::Mat>	images;				/* vector of images from video to display */
 /* Flags */
 extern bool			  VideoLoaded;			/* 0=>no; 1=>yes (file exists and is opened in ffmpeg library) */
 extern bool			  changeFFSpeed;

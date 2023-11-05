@@ -23,7 +23,11 @@ void AllocateStruct(int frame_count)
 	//pointData = (GroundTruth*)calloc(frame_count, sizeof(GroundTruth));
 	pointData = new GroundTruth[frame_count]();
 	if (pointData == nullptr) {
-		cout << "Failure to allocate!" << "\n";
+		throw std::runtime_error("Failed to allocate memory");
+	}
+	pointData_2 = new GroundTruth[TotalData]();
+	if (pointData_2 == nullptr) {
+		throw std::runtime_error("Failed to allocate memory");
 	}
 }
 
@@ -63,14 +67,10 @@ char				text[320];
 //if (VideoLoaded  &&  disp_image != NULL)
 if (VideoLoaded)
   {
-
-	  /*if (compareReady == 2) {
-		applyMask();
-	  }
-	  else {
+	if(compareReady != 2) {
 		ReadVideoFrame();
-	  }*/
-	ReadVideoFrame();
+	  }
+	//ReadVideoFrame();
   
 	BeginPaint(MainWnd,&Painter);
 	hDC=GetDC(MainWnd);
@@ -402,61 +402,98 @@ void ModifyPoint(int xmouse, int ymouse, int xchange, int ychange)
 
 	@param filename: path to the csv file.
 */
-void LoadCSVData(char* filename) {
-	ifstream file (filename);
-	int frame = 0;
-	int p_count;
+//void LoadCSVData(char* filename) {
+//	ifstream file (filename);
+//	int frame = 0;
+//	int p_count;
+//
+//	if (!file) {
+//		throw std::runtime_error("Failed to open file");
+//		return;
+//	}
+//
+//	string line;
+//	getline(file, line); // read and discard the header line
+//	while (getline(file, line)) {
+//		stringstream iss(line);
+//		string token;
+//		
+//		std::getline(iss, token, ',');
+//		std::getline(iss, token, ',');
+//		p_count = stoi(token);
+//
+//		if (compareReady == 2)
+//		{
+//			/*pointData_2 = new GroundTruth[TotalData]();
+//			if (pointData_2 == nullptr) {
+//				throw std::runtime_error("Failed to allocate memory");
+//				return;
+//			}*/
+//			pointData_2[frame].point_count = p_count;
+//			std::getline(iss, token, ',');
+//			pointData_2[frame].manual = stoi(token); // This token can be discarded as it is not useful
+//			for (int i = 0; i < 10; i++) {
+//				getline(iss, token, ',');
+//				pointData_2[frame].x[i] = (token == "NaN") ? 0 : stoi(token); // check if the value is NaN and store it as zero
+//				getline(iss, token, ',');
+//				pointData_2[frame].y[i] = (token == "NaN") ? 0 : stoi(token);
+//			}
+//		}
+//		else {
+//			pointData[frame].point_count = p_count;
+//			std::getline(iss, token, ',');
+//			pointData[frame].manual = stoi(token); // This token can be discarded as it is not useful
+//			for (int i = 0; i < 10; i++) {
+//				getline(iss, token, ',');
+//				pointData[frame].x[i] = (token == "NaN") ? 0 : stoi(token);
+//				getline(iss, token, ',');
+//				pointData[frame].y[i] = (token == "NaN") ? 0 : stoi(token);
+//			}
+//		}
+//		frame++;
+//	}
+//}
 
-	if (!file) {
-		std::cerr << "Failed to opent the file \n";
-		return;
+void LoadCSVData(char* file_name)
+{
+	FILE* fpt;
+	int i, frame_number, frame = 0;
+
+	// code to detect size of data set
+	if ((fpt = fopen(file_name, "r")) == NULL)
+	{
+		exit(0);
 	}
-
-	string line;
-	getline(file, line); // read and discard the header line
-	auto test = 872;
-	while (getline(file, line)) {
-		stringstream iss(line);
-		string token;
-		
-		std::getline(iss, token, ',');
-		std::getline(iss, token, ',');
-		p_count = stoi(token);
-
-		if (compareReady == 2)
-		{
-			pointData_2 = new GroundTruth[TotalData]();
-			if (pointData_2 == nullptr) {
-				cout << "Failure to allocate!" << "\n";
-			}
-
-			pointData_2[frame].point_count = p_count;
-			std::getline(iss, token, ',');
-			pointData_2[frame].manual = stoi(token); // This token can be discarded as it is not useful
-			for (int i = 0; i < 10; i++) {
-				getline(iss, token, ',');
-				pointData_2[frame].x[i] = (token == "NaN") ? 0 : stoi(token); // check if the value is NaN and store it as zero
-				getline(iss, token, ',');
-				pointData_2[frame].y[i] = (token == "NaN") ? 0 : stoi(token);
+	fscanf(fpt, "%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s,%*s");
+	fscanf(fpt, "\n");
+	while (frame < TotalData) {
+		if (compareReady != 2) {
+			fscanf(fpt, "%d,%d,%d", &frame_number, &pointData[frame].point_count, &pointData[frame].manual);
+			for (i = 0; i < 10; i++)
+			{
+				if (i < pointData[frame].point_count) {
+					fscanf(fpt, ",%d,%d", &pointData[frame].x[i], &pointData[frame].y[i]);
+				}
+				else {
+					fscanf(fpt, ",%*s,%*s");
+				}
 			}
 		}
 		else {
-			pointData[frame].point_count = p_count;
-			std::getline(iss, token, ',');
-			pointData[frame].manual = stoi(token); // This token can be discarded as it is not useful
-			for (int i = 0; i < 10; i++) {
-				getline(iss, token, ',');
-				pointData[frame].x[i] = (token == "NaN") ? 0 : stoi(token);
-				getline(iss, token, ',');
-				pointData[frame].y[i] = (token == "NaN") ? 0 : stoi(token);
+			fscanf(fpt, "%d,%d,%d", &frame_number, &pointData_2[frame].point_count, &pointData_2[frame].manual);
+			for (i = 0; i < 10; i++) {
+				if (i < pointData_2[frame].point_count) {
+					fscanf(fpt, ",%d,%d", &pointData_2[frame].x[i], &pointData_2[frame].y[i]);
+				}
+				else {
+					fscanf(fpt, ",%*s,%*s");
+				}
 			}
 		}
+		fscanf(fpt, "\n");
 		frame++;
-		if (test == frame)
-		{
-			cout<<"Yup";
-		}
 	}
+
 }
 
 void UpdateMode(int mode, int flag) /* new addition 5/26/2023 */
